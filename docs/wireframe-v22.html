@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI — V22 Wireframe: ItemSlots · Drag &amp; Drop</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Courier New', monospace;
+    color: #F3E7D3;
+    padding: 20px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .mc-screen {
+    background: #17120D;
+    border: 2px solid #5A3A1C;
+    width: 300px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .screen-label { font-size: 10px; color: #5A3A1C; padding-bottom: 4px; border-bottom: 1px solid #5A3A1C; letter-spacing: 1px; }
+
+  .sec-title { color: #B87333; font-weight: bold; font-size: 10px; }
+
+  /* ── Item slots row ───────────────────────────────────── */
+  .item-row { display: flex; gap: 3px; padding: 4px 0; }
+  .item-slot {
+    width: 28px; height: 28px;
+    background: #2A2019;
+    border: 1px solid #5A3A1C;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: border-color 0.1s;
+    position: relative;
+  }
+  .item-slot:hover { border-color: #B87333; background: #362A20; }
+
+  /* ── Drag & Drop row ──────────────────────────────────── */
+  .dnd-row { display: flex; gap: 8px; padding: 4px 0; }
+
+  .drag-panel {
+    padding: 7px 14px;
+    font-size: 10px;
+    cursor: grab;
+    border-radius: 2px;
+    transition: opacity 0.15s, transform 0.1s;
+    position: relative;
+  }
+  .drag-panel:hover { transform: translateY(-1px); }
+  .drag-panel.dragging { opacity: 0.4; cursor: grabbing; }
+  .drag-red   { background: #7f1d1d; border: 1px solid #ef4444; color: #fecaca; }
+  .drag-blue  { background: #1e3a5f; border: 1px solid #3b82f6; color: #bfdbfe; }
+  .drag-green { background: #14532d; border: 1px solid #22c55e; color: #bbf7d0; }
+
+  /* ── Drop zone ────────────────────────────────────────── */
+  .drop-zone-section { background: #1F1812; border: 1px solid #5A3A1C; border-radius: 3px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .drop-zone {
+    min-height: 40px;
+    border: 2px dashed #5A3A1C;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #7A6A55;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .drop-zone.over { border-color: #B87333; background: #362A20; color: #F0B27A; }
+  .drop-zone.filled { background: transparent; border-style: solid; }
+
+  /* ── Item grid ────────────────────────────────────────── */
+  .grid-section { background: #1F1812; border: 1px solid #5A3A1C; border-radius: 3px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .item-grid { display: grid; grid-template-columns: repeat(5, 28px); gap: 2px; }
+  .hint-text { color: #7A6A55; font-size: 9px; }
+
+  /* ── Ghost element ────────────────────────────────────── */
+  #ghost {
+    display: none;
+    position: fixed;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.8;
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: 2px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ── Annotations ──────────────────────────────────────── */
+  .annotations { background: #111; border: 1px solid #333; padding: 16px; font-size: 11px; max-width: 320px; line-height: 1.7; color: #ccc; }
+  .annotations h2 { color: #B87333; font-size: 13px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+  .annotations h3 { color: #94a3b8; font-size: 11px; margin: 10px 0 4px; }
+  .annotations ul { padding-left: 14px; }
+  .annotations li { margin-bottom: 3px; }
+  .tag { background: #1e3a8a; color: #93c5fd; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cls { background: #312e81; color: #a5b4fc; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cmd { background: #1e2a3a; color: #4ade80; padding: 1px 6px; border-radius: 2px; font-size: 10px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<!-- ── MC Screen ──────────────────────────────────────────── -->
+<div class="mc-screen">
+  <div class="screen-label">▶ /tessera test-v22</div>
+
+  <!-- Item slots -->
+  <span class="sec-title">[ item-slot — déclaratif HTML ]</span>
+  <div class="item-row">
+    <div class="item-slot" title="minecraft:diamond">💎</div>
+    <div class="item-slot" title="minecraft:gold_ingot">🥇</div>
+    <div class="item-slot" title="minecraft:iron_ingot">🔩</div>
+    <div class="item-slot" title="minecraft:coal">🪨</div>
+    <div class="item-slot" title="minecraft:emerald">💚</div>
+    <div class="item-slot" title="(vide)"></div>
+    <div class="item-slot" title="(vide)"></div>
+  </div>
+
+  <!-- Drag & Drop panels -->
+  <span class="sec-title">[ drag &amp; drop — glisse dans la zone ]</span>
+  <div class="dnd-row">
+    <div class="drag-panel drag-red"   id="drag-rouge" draggable="true">Rouge</div>
+    <div class="drag-panel drag-blue"  id="drag-bleu"  draggable="true">Bleu</div>
+    <div class="drag-panel drag-green" id="drag-vert"  draggable="true">Vert</div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="drop-zone-section">
+    <span class="sec-title" style="font-size:9px">Zone de dépôt</span>
+    <div class="drop-zone" id="dropZone">Glisse un panneau ici</div>
+  </div>
+
+  <!-- Item grid (drag between slots) -->
+  <div class="grid-section">
+    <span class="sec-title" style="font-size:9px">[ TesseraItemGrid — grille 5×2 ]</span>
+    <div class="item-grid" id="itemGrid"></div>
+    <span class="hint-text">Clic sur un slot → sélectionner · Drag entre slots</span>
+  </div>
+</div>
+
+<!-- Ghost element for drag visual -->
+<div id="ghost"></div>
+
+<!-- ── Annotations ────────────────────────────────────────── -->
+<div class="annotations">
+  <h2>V22 — Item Slots · Drag &amp; Drop</h2>
+  <p>Commande in-game : <span class="cmd">/tessera test-v22</span></p>
+
+  <h3>TesseraItemSlot</h3>
+  <ul>
+    <li>Tag HTML : <span class="cls">&lt;item-slot size="24" item="minecraft:diamond"/&gt;</span></li>
+    <li>Rendu natif d'un <span class="cls">ItemStack</span> Minecraft</li>
+    <li>Attribut <span class="cls">show-count="false"</span> → pas de chiffre</li>
+    <li>Slot vide = carré gris avec bordure</li>
+  </ul>
+
+  <h3>TesseraItemGrid</h3>
+  <ul>
+    <li><span class="cls">new TesseraItemGrid(cols, rows, slotSize)</span></li>
+    <li>Drag & drop entre slots automatique</li>
+    <li><span class="cls">.setItem(col, row, stack)</span></li>
+    <li><span class="cls">.getItem(col, row)</span></li>
+  </ul>
+
+  <h3>TesseraDragContext</h3>
+  <ul>
+    <li>État global du drag (un seul drag actif)</li>
+    <li><span class="cls">TesseraDragContext.startDrag(src, payload, x, y)</span></li>
+    <li><span class="cls">TesseraDragContext.isDragging()</span></li>
+    <li><span class="cls">TesseraDragContext.endDrag(x, y)</span></li>
+    <li>Ghost widget suit le curseur</li>
+  </ul>
+
+  <h3>TesseraDropZone</h3>
+  <ul>
+    <li>Interface : <span class="cls">dropBounds()</span> + <span class="cls">accepts(payload)</span> + <span class="cls">onDrop(payload)</span></li>
+    <li>Wiring HTML : <span class="cls">oncontextmenu="..."</span></li>
+    <li>Ou Java : <span class="cls">panel.dropZone(handler)</span></li>
+    <li>Panel source : <span class="cls">draggable="true" drag-payload="..."</span></li>
+  </ul>
+</div>
+
+<script>
+// ── Item grid setup ─────────────────────────────────────────
+const ITEMS = ['💎','🥇','🔩','🪨','💚','🧪','🗡️','🏹','🛡️',''];
+const grid = document.getElementById('itemGrid');
+let selectedSlot = null;
+let dragFromSlot = null;
+const gridSlots = [];
+
+for (let i = 0; i < 10; i++) {
+  const slot = document.createElement('div');
+  slot.className = 'item-slot';
+  slot.textContent = ITEMS[i] || '';
+  slot.dataset.idx = i;
+  slot.addEventListener('click', () => {
+    if (selectedSlot !== null) {
+      const tmp = gridSlots[selectedSlot].textContent;
+      gridSlots[selectedSlot].textContent = slot.textContent;
+      slot.textContent = tmp;
+      gridSlots[selectedSlot].style.borderColor = '';
+      selectedSlot = null;
+    } else if (slot.textContent) {
+      selectedSlot = i;
+      slot.style.borderColor = '#F0B27A';
+    }
+  });
+  grid.appendChild(slot);
+  gridSlots.push(slot);
+}
+
+// ── Drag & drop panels ──────────────────────────────────────
+const ghost = document.getElementById('ghost');
+const dropZone = document.getElementById('dropZone');
+
+document.querySelectorAll('.drag-panel').forEach(panel => {
+  panel.addEventListener('dragstart', e => {
+    ghost.style.background = getComputedStyle(panel).background;
+    ghost.style.color = getComputedStyle(panel).color;
+    ghost.style.border = getComputedStyle(panel).border;
+    ghost.textContent = panel.textContent;
+    panel.classList.add('dragging');
+  });
+  panel.addEventListener('dragend', () => {
+    panel.classList.remove('dragging');
+    ghost.style.display = 'none';
+  });
+});
+
+document.addEventListener('dragover', e => {
+  e.preventDefault();
+  ghost.style.display = 'block';
+  ghost.style.left = e.clientX + 'px';
+  ghost.style.top  = e.clientY + 'px';
+});
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  const src = document.querySelector('.drag-panel.dragging') || document.querySelector('[draggable=true]');
+  dropZone.classList.remove('over');
+  dropZone.classList.add('filled');
+  const color = src ? getComputedStyle(src).borderColor : '#B87333';
+  dropZone.style.borderColor = color;
+  dropZone.style.borderStyle = 'solid';
+  dropZone.textContent = '✔ ' + (src ? src.textContent.trim() : 'dropped') + ' déposé';
+  dropZone.style.color = '#F0B27A';
+});
+</script>
+</body>
+</html>

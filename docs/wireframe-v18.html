@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI — V18 Wireframe: Tooltips · Reactive · Toasts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Courier New', monospace;
+    color: #F3E7D3;
+    padding: 20px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  /* ── Minecraft screen frame ───────────────────────────── */
+  .mc-screen {
+    background: #1A1208;
+    border: 2px solid #5A3A1C;
+    width: 280px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .screen-label {
+    font-size: 10px;
+    color: #5A3A1C;
+    border-bottom: 1px solid #5A3A1C;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Title ─────────────────────────────────────────────── */
+  .title {
+    color: #B87333;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Sections ─────────────────────────────────────────── */
+  .section {
+    background: #1e2a3a;
+    border: 1px solid #2d4060;
+    border-radius: 4px;
+    padding: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .section-title {
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Button row ───────────────────────────────────────── */
+  .btn-row {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  /* ── Buttons ──────────────────────────────────────────── */
+  button {
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 10px;
+    padding: 3px 10px;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: #1e3a8a; color: #fff; border: 1px solid #3730a3; }
+  .btn-primary:hover { background: #2d52c2; }
+  .btn-secondary { background: #312e81; color: #a5b4fc; border: 1px solid #4338ca; }
+  .btn-secondary:hover { background: #3730a3; }
+  .btn-dec { background: #7c3aed; color: #fff; border: 1px solid #6d28d9; font-weight: bold; }
+  .btn-dec:hover { background: #8b5cf6; }
+  .btn-inc { background: #059669; color: #fff; border: 1px solid #047857; font-weight: bold; }
+  .btn-inc:hover { background: #10b981; }
+  .btn-success { background: #065f46; color: #4ade80; border: 1px solid #059669; }
+  .btn-success:hover { background: #047857; }
+  .btn-error { background: #7f1d1d; color: #f87171; border: 1px solid #991b1b; }
+  .btn-error:hover { background: #991b1b; }
+  .btn-info { background: #1e3a5f; color: #93c5fd; border: 1px solid #1d4ed8; }
+  .btn-info:hover { background: #1d4ed8; }
+
+  .counter-display {
+    color: #f0f9ff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 0 8px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* ── Tooltip simulation ───────────────────────────────── */
+  .has-tooltip { position: relative; }
+  .has-tooltip:hover .tooltip-box { display: block; }
+  .tooltip-box {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: #2A2019;
+    border: 1px solid #B87333;
+    padding: 4px 7px;
+    font-size: 9px;
+    color: #F3E7D3;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* ── Toast simulation ─────────────────────────────────── */
+  .toast-overlay {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .toast {
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 10px;
+    border-left: 3px solid;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s;
+  }
+  .toast.show { opacity: 1; transform: translateX(0); }
+  .toast-success { background: #065f46; color: #4ade80; border-color: #4ade80; }
+  .toast-error   { background: #7f1d1d; color: #f87171; border-color: #f87171; }
+  .toast-info    { background: #1e3a5f; color: #93c5fd; border-color: #93c5fd; }
+
+  /* ── Annotations panel ────────────────────────────────── */
+  .annotations {
+    background: #111;
+    border: 1px solid #333;
+    padding: 16px;
+    font-size: 11px;
+    max-width: 320px;
+    line-height: 1.7;
+    color: #ccc;
+    flex-shrink: 0;
+  }
+  .annotations h2 { color: #B87333; font-size: 13px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+  .annotations h3 { color: #94a3b8; font-size: 11px; margin: 10px 0 4px; }
+  .annotations ul { padding-left: 14px; }
+  .annotations li { margin-bottom: 3px; }
+  .tag  { background: #1e3a8a; color: #93c5fd; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cls  { background: #312e81; color: #a5b4fc; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cmd  { background: #1e2a3a; color: #4ade80; padding: 1px 6px; border-radius: 2px; font-size: 10px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<!-- ── MC Screen ──────────────────────────────────────────── -->
+<div class="mc-screen">
+  <div class="screen-label">▶ /tessera test-v18</div>
+
+  <span class="title">TesseraUI v1.8 — Tooltips · Reactive · Toasts</span>
+
+  <!-- Section Tooltips -->
+  <div class="section">
+    <span class="section-title">Tooltips</span>
+    <div class="btn-row">
+      <span class="has-tooltip">
+        <button class="btn-primary">Hover me</button>
+        <div class="tooltip-box">Ceci est un tooltip statique</div>
+      </span>
+      <span class="has-tooltip">
+        <button class="btn-secondary">Tooltip dynamique</button>
+        <div class="tooltip-box">{{ t:ui.count }}</div>
+      </span>
+    </div>
+  </div>
+
+  <!-- Section Reactive counter -->
+  <div class="section">
+    <span class="section-title">Compteur réactif</span>
+    <div class="btn-row">
+      <button class="btn-dec" onclick="decrement()">−</button>
+      <span class="counter-display" id="count">0</span>
+      <button class="btn-inc" onclick="increment()">+</button>
+    </div>
+  </div>
+
+  <!-- Section Toasts -->
+  <div class="section">
+    <span class="section-title">Toasts</span>
+    <div class="btn-row">
+      <button class="btn-success" onclick="showToast('success')">Success</button>
+      <button class="btn-error"   onclick="showToast('error')">Error</button>
+      <button class="btn-info"    onclick="showToast('info')">Info</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast overlay ──────────────────────────────────────── -->
+<div class="toast-overlay" id="toasts"></div>
+
+<!-- ── Annotations ────────────────────────────────────────── -->
+<div class="annotations">
+  <h2>V18 — Tooltips · Réactivité · Toasts</h2>
+  <p>Commande in-game : <span class="cmd">/tessera test-v18</span></p>
+
+  <h3>Nouvelles classes</h3>
+  <ul>
+    <li><span class="tag">TesseraReactiveModel</span> — modèle observable</li>
+    <li><span class="tag">TesseraToast</span> — notifications en overlay</li>
+  </ul>
+
+  <h3>Tooltips</h3>
+  <ul>
+    <li>Attribut HTML <span class="cls">tooltip="..."</span></li>
+    <li>Supporte les bindings <span class="cls">{{ expr }}</span></li>
+    <li>Rendu auto via <span class="tag">TesseraPanel</span></li>
+    <li>Hover sur les boutons pour voir</li>
+  </ul>
+
+  <h3>Compteur réactif</h3>
+  <ul>
+    <li><span class="tag">TesseraReactiveModel</span> + <span class="cls">watchModel()</span></li>
+    <li>Boutons − / + mettent à jour le modèle</li>
+    <li>L'UI se re-render automatiquement</li>
+  </ul>
+
+  <h3>Toasts</h3>
+  <ul>
+    <li>Queue de notifications bas-droite</li>
+    <li>Auto-expire après 4 secondes</li>
+    <li>3 niveaux : success / error / info</li>
+    <li><span class="cls">TesseraToast.show(msg, TesseraToast.Level.SUCCESS)</span></li>
+  </ul>
+</div>
+
+<script>
+let count = 0;
+function increment() { count++; document.getElementById('count').textContent = count; }
+function decrement() { count--; document.getElementById('count').textContent = count; }
+
+function showToast(type) {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  const msgs = { success: '✔ Operation completed', error: '✘ Something went wrong', info: 'ℹ Information message' };
+  t.className = 'toast toast-' + type;
+  t.textContent = msgs[type];
+  c.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 3500);
+}
+</script>
+</body>
+</html>

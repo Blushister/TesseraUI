@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI — V20 Wireframe: VirtualList · CSS Transitions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Courier New', monospace;
+    color: #F3E7D3;
+    padding: 20px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .mc-screen {
+    background: #0f172a;
+    border: 2px solid #334155;
+    width: 320px;
+    padding: 8px;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .screen-label {
+    display: block;
+    font-size: 10px;
+    color: #334155;
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #334155;
+    letter-spacing: 1px;
+    grid-column: 1 / -1;
+  }
+  .screen-inner {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+  }
+
+  /* ── Sections ─────────────────────────────────────────── */
+  .section {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 3px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .list-section  { flex: 0 0 140px; }
+  .trans-section { flex: 1; }
+
+  .sec-title { color: #94a3b8; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sec-hint  { color: #64748b; font-size: 8px; }
+
+  /* ── Virtual list ─────────────────────────────────────── */
+  .vlist {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    height: 110px;
+    overflow-y: auto;
+  }
+  .vlist::-webkit-scrollbar { width: 4px; }
+  .vlist::-webkit-scrollbar-track { background: #0f172a; }
+  .vlist::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  .vlist-row {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    height: 18px;
+    border-bottom: 1px solid #1e293b;
+    font-size: 9px;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .vlist-row:hover { background: #1e293b; }
+  .vlist-idx { color: #64748b; width: 24px; flex-shrink: 0; }
+  .vlist-name { color: #e2e8f0; }
+
+  /* ── Slider row ───────────────────────────────────────── */
+  .slider-row { display: flex; align-items: center; gap: 4px; }
+  .slider-lbl { color: #94a3b8; font-size: 8px; flex-shrink: 0; }
+  input[type=range] { flex: 1; accent-color: #B87333; height: 8px; }
+  .slider-val { color: #B87333; font-size: 9px; width: 20px; text-align: right; }
+
+  /* ── Transition demo cards ────────────────────────────── */
+  .demo-card {
+    padding: 6px 10px;
+    border-radius: 2px;
+    border: 1px solid #334155;
+    cursor: pointer;
+  }
+  .card-text { font-size: 9px; }
+
+  /* bg transition */
+  .bg-card { background: #1e3a8a; }
+  .bg-card .card-text { color: #93c5fd; }
+  .bg-card:hover { background: #3b82f6; }
+
+  /* opacity transition */
+  .op-card { background: #14532d; transition: opacity 200ms; }
+  .op-card .card-text { color: #4ade80; }
+  .op-card:hover { opacity: 0.4; }
+
+  /* border-color transition */
+  .bc-card { background: #1e293b; border: 1px solid #334155; transition: border-color 150ms; }
+  .bc-card .card-text { color: #94a3b8; }
+  .bc-card:hover { border-color: #f97316; }
+
+  /* color transition */
+  .color-card { background: #1e293b; }
+  .color-card .card-text { color: #64748b; transition: color 250ms; }
+  .color-card:hover .card-text { color: #fbbf24; }
+
+  /* ── Annotations ──────────────────────────────────────── */
+  .annotations { background: #111; border: 1px solid #333; padding: 16px; font-size: 11px; max-width: 320px; line-height: 1.7; color: #ccc; }
+  .annotations h2 { color: #B87333; font-size: 13px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+  .annotations h3 { color: #94a3b8; font-size: 11px; margin: 10px 0 4px; }
+  .annotations ul { padding-left: 14px; }
+  .annotations li { margin-bottom: 3px; }
+  .tag { background: #1e3a8a; color: #93c5fd; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cls { background: #312e81; color: #a5b4fc; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cmd { background: #1e2a3a; color: #4ade80; padding: 1px 6px; border-radius: 2px; font-size: 10px; font-family: monospace; }
+  .prop { background: #1a2a1a; color: #4ade80; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ── MC Screen ──────────────────────────────────────────── -->
+<div class="mc-screen" style="flex-direction:column">
+  <span class="screen-label">▶ /tessera test-v20</span>
+
+  <div class="screen-inner">
+
+    <!-- Left: Virtual list -->
+    <div class="section list-section">
+      <span class="sec-title">Virtual List</span>
+      <div class="vlist" id="vlist"></div>
+      <div class="slider-row">
+        <span class="slider-lbl">Row height</span>
+        <input type="range" min="12" max="28" value="18" id="rhSlider" oninput="updateRowH(this.value)" />
+        <span class="slider-val" id="rhVal">18</span>
+      </div>
+    </div>
+
+    <!-- Right: Transitions -->
+    <div class="section trans-section">
+      <span class="sec-title">CSS Transitions</span>
+
+      <span class="sec-hint">background 300ms</span>
+      <div class="demo-card bg-card" style="transition:background 300ms">
+        <span class="card-text">Hover (background)</span>
+      </div>
+
+      <span class="sec-hint">opacity 200ms</span>
+      <div class="demo-card op-card">
+        <span class="card-text">Hover (opacity)</span>
+      </div>
+
+      <span class="sec-hint">border-color 150ms</span>
+      <div class="demo-card bc-card">
+        <span class="card-text">Hover (border)</span>
+      </div>
+
+      <span class="sec-hint">color 250ms</span>
+      <div class="demo-card color-card">
+        <span class="card-text">Hover (text color)</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Annotations ────────────────────────────────────────── -->
+<div class="annotations">
+  <h2>V20 — VirtualList · Transitions CSS</h2>
+  <p>Commande in-game : <span class="cmd">/tessera test-v20</span></p>
+
+  <h3>TesseraVirtualList</h3>
+  <ul>
+    <li>Tag HTML : <span class="cls">&lt;virtual-list row-height="16" v-for="..."&gt;</span></li>
+    <li>Seules les lignes visibles sont rendues</li>
+    <li>Cache LRU des widgets de lignes</li>
+    <li>Scroll natif avec clippage scissor</li>
+    <li>Slider contrôle la hauteur de ligne dynamiquement</li>
+  </ul>
+
+  <h3>CSS Transitions (TesseraPanel)</h3>
+  <ul>
+    <li>Propriété CSS <span class="prop">transition: &lt;property&gt; &lt;ms&gt;</span></li>
+    <li>Hover les cartes → animation fluide</li>
+    <li>4 propriétés supportées :</li>
+  </ul>
+  <ul style="margin-left:14px; margin-top:4px;">
+    <li><span class="prop">background</span> — interpolation couleur de fond</li>
+    <li><span class="prop">opacity</span> — fondu transparent</li>
+    <li><span class="prop">border-color</span> — flash de bordure</li>
+    <li><span class="prop">color</span> — changement couleur du texte enfant</li>
+    <li><span class="prop">all</span> — active toutes les propriétés</li>
+  </ul>
+
+  <h3>Java API</h3>
+  <ul>
+    <li><span class="cls">TesseraVirtualList.of(items, rowH, factory)</span></li>
+    <li><span class="cls">panel.transition(300, "background")</span></li>
+    <li><span class="cls">panel.hoverColor(0xFFfbbf24)</span></li>
+  </ul>
+</div>
+
+<script>
+// Generate virtual list items
+const vlist = document.getElementById('vlist');
+const ITEMS = 80;
+function buildList(rowH) {
+  vlist.innerHTML = '';
+  for (let i = 0; i < ITEMS; i++) {
+    const row = document.createElement('div');
+    row.className = 'vlist-row';
+    row.style.height = rowH + 'px';
+    const names = ['Diamond Sword','Iron Pickaxe','Golden Apple','Enchanted Bow','Netherite Axe'];
+    row.innerHTML = `<span class="vlist-idx">${i+1}</span><span class="vlist-name">${names[i % names.length]}</span>`;
+    vlist.appendChild(row);
+  }
+}
+function updateRowH(v) {
+  document.getElementById('rhVal').textContent = v;
+  buildList(parseInt(v));
+}
+buildList(18);
+</script>
+</body>
+</html>

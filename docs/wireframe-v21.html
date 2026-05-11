@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI — V21 Wireframe: ContextMenu · Components · Debug</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0a;
+    font-family: 'Courier New', monospace;
+    color: #F3E7D3;
+    padding: 20px;
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .mc-screen {
+    background: #17120D;
+    border: 2px solid #5A3A1C;
+    width: 340px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+    position: relative;
+    user-select: none;
+  }
+  .screen-label { font-size: 10px; color: #5A3A1C; padding-bottom: 4px; border-bottom: 1px solid #5A3A1C; letter-spacing: 1px; }
+
+  /* ── Toolbar ──────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    background: #1F1812;
+    border: 1px solid #A0642C;
+    border-radius: 3px;
+  }
+  .toolbar-title { flex: 1; color: #F0B27A; font-weight: bold; font-size: 10px; }
+  .btn-debug {
+    background: #2A2019; color: #F3E7D3;
+    border: 1px solid #5A3A1C; font-family: 'Courier New', monospace;
+    font-size: 9px; padding: 2px 8px; cursor: pointer; border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .btn-debug:hover { background: #362A20; border-color: #A0642C; }
+
+  /* ── Cards row ────────────────────────────────────────── */
+  .cards-row { display: flex; gap: 6px; }
+
+  /* ── Card component ───────────────────────────────────── */
+  .mc-card {
+    flex: 1;
+    background: #1F1812;
+    border: 1px solid #5A3A1C;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .mc-card:hover { border-color: #A0642C; background: #2A2019; }
+  .card-header {
+    padding: 5px 7px;
+    background: #2A2019;
+    border-bottom: 1px solid #5A3A1C;
+  }
+  .card-header h3 { color: #F0B27A; font-size: 10px; font-weight: bold; }
+  .card-body { padding: 5px 7px; display: flex; flex-direction: column; gap: 2px; }
+  .card-body p { color: #C2AD8E; font-size: 9px; }
+
+  /* ── Nested demo ──────────────────────────────────────── */
+  .nested-demo {
+    background: #1F1812; border: 1px solid #362A20;
+    border-radius: 3px; padding: 7px; display: flex;
+    flex-direction: column; gap: 4px;
+  }
+  .sec-title-w { color: #F3E7D3; font-weight: bold; font-size: 10px; }
+  .nest-l0 { background: #2A2019; border: 1px solid #A0642C; border-radius: 2px; padding: 5px; }
+  .nest-l1 { background: #362A20; border: 1px solid #D89255; padding: 4px; display: flex; gap: 4px; }
+  .nest-l2 { flex: 1; background: #17120D; border: 1px solid #5A3A1C; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+  .nest-l3 { background: #2A2019; border: 1px solid #7A6A55; padding: 3px; }
+  .nest-label { color: #C2AD8E; font-size: 9px; }
+
+  .hint { color: #7A6A55; font-size: 9px; }
+
+  /* ── Context menu ─────────────────────────────────────── */
+  .ctx-menu {
+    display: none;
+    position: absolute;
+    background: #1F1812;
+    border: 1px solid #B87333;
+    min-width: 120px;
+    z-index: 100;
+    flex-direction: column;
+  }
+  .ctx-menu.open { display: flex; }
+  .ctx-item {
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #C2AD8E;
+    cursor: pointer;
+    border-bottom: 1px solid #362A20;
+    transition: background 0.1s;
+  }
+  .ctx-item:last-child { border-bottom: none; }
+  .ctx-item:hover { background: #2A2019; color: #F0B27A; }
+  .ctx-sep { height: 1px; background: #362A20; margin: 2px 0; }
+
+  /* ── Debug overlay ────────────────────────────────────── */
+  .debug-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: none;
+  }
+  .debug-overlay.active { display: block; }
+  .dbg-rect {
+    position: absolute;
+    border: 1px solid;
+    background: transparent;
+  }
+  .dbg-0 { border-color: rgba(255,60,60,0.7); }
+  .dbg-1 { border-color: rgba(60,255,60,0.7); }
+  .dbg-2 { border-color: rgba(60,120,255,0.7); }
+  .dbg-3 { border-color: rgba(255,220,60,0.7); }
+
+  /* ── Annotations ──────────────────────────────────────── */
+  .annotations { background: #111; border: 1px solid #333; padding: 16px; font-size: 11px; max-width: 320px; line-height: 1.7; color: #ccc; }
+  .annotations h2 { color: #B87333; font-size: 13px; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+  .annotations h3 { color: #94a3b8; font-size: 11px; margin: 10px 0 4px; }
+  .annotations ul { padding-left: 14px; }
+  .annotations li { margin-bottom: 3px; }
+  .tag { background: #1e3a8a; color: #93c5fd; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cls { background: #312e81; color: #a5b4fc; padding: 1px 5px; border-radius: 2px; font-size: 10px; }
+  .cmd { background: #1e2a3a; color: #4ade80; padding: 1px 6px; border-radius: 2px; font-size: 10px; font-family: monospace; }
+  .key { background: #334155; color: #e2e8f0; padding: 1px 5px; border-radius: 2px; font-size: 10px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- ── MC Screen ──────────────────────────────────────────── -->
+<div class="mc-screen" id="screen" oncontextmenu="return false;">
+  <div class="screen-label">▶ /tessera test-v21</div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <span class="toolbar-title">TesseraUI v2.1 — ContextMenu · Components · Debug</span>
+    <button class="btn-debug" onclick="toggleDebug()">[I] Debug</button>
+  </div>
+
+  <!-- Cards (custom component <card>) -->
+  <div class="cards-row">
+    <div class="mc-card" oncontextmenu="showCtx(event, 'Alpha')">
+      <div class="card-header"><h3>Carte Alpha</h3></div>
+      <div class="card-body">
+        <p>Contenu de la carte Alpha.</p>
+        <p>Clic droit pour options.</p>
+      </div>
+    </div>
+    <div class="mc-card" oncontextmenu="showCtx(event, 'Beta')">
+      <div class="card-header"><h3>Carte Beta</h3></div>
+      <div class="card-body">
+        <p>Contenu de la carte Beta.</p>
+        <p>Clic droit pour options.</p>
+      </div>
+    </div>
+    <div class="mc-card" oncontextmenu="showCtx(event, 'Gamma')">
+      <div class="card-header"><h3>Carte Gamma</h3></div>
+      <div class="card-body">
+        <p>Contenu de la carte Gamma.</p>
+        <p>Clic droit pour options.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nested debug demo -->
+  <div class="nested-demo">
+    <span class="sec-title-w">Widgets imbriqués — debug overlay</span>
+    <div class="nest-l0">
+      <div class="nest-l1">
+        <div class="nest-l2">
+          <span class="nest-label">Profondeur 2</span>
+          <div class="nest-l3"><span class="nest-label">Profondeur 3+</span></div>
+        </div>
+        <div class="nest-l2">
+          <span class="nest-label">Autre branche</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <span class="hint">Appuyez [I] pour l'overlay debug. Clic droit sur les cartes.</span>
+
+  <!-- Context menu -->
+  <div class="ctx-menu" id="ctxMenu">
+    <div class="ctx-item" id="ctxTitle" style="color:#F0B27A;font-weight:bold;cursor:default">Carte —</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="closeCtx()">✎ Modifier</div>
+    <div class="ctx-item" onclick="closeCtx()">⎘ Dupliquer</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" style="color:#f87171" onclick="closeCtx()">✗ Supprimer</div>
+  </div>
+
+  <!-- Debug overlay rects -->
+  <div class="debug-overlay" id="debugOverlay">
+    <!-- Bounds drawn by JS -->
+  </div>
+</div>
+
+<!-- ── Annotations ────────────────────────────────────────── -->
+<div class="annotations">
+  <h2>V21 — ContextMenu · Components · Debug</h2>
+  <p>Commande in-game : <span class="cmd">/tessera test-v21</span></p>
+
+  <h3>TesseraComponentRegistry</h3>
+  <ul>
+    <li>Définir un composant dans le HTML :</li>
+  </ul>
+  <pre style="background:#1e2a3a;color:#a5b4fc;padding:6px;font-size:9px;margin:4px 0;border-radius:2px">&lt;template name="card"&gt;
+  &lt;col class="card"&gt;
+    &lt;row class="card-header"&gt;
+      &lt;slot name="title"/&gt;
+    &lt;/row&gt;
+    &lt;slot/&gt;
+  &lt;/col&gt;
+&lt;/template&gt;</pre>
+  <ul>
+    <li>Utilisation : <span class="cls">&lt;card&gt;&lt;h3 slot="title"&gt;...&lt;/h3&gt;&lt;/card&gt;</span></li>
+    <li><span class="cls">&lt;slot&gt;</span> = contenu enfant injecté</li>
+    <li><span class="cls">&lt;slot name="x"&gt;</span> = slot nommé</li>
+  </ul>
+
+  <h3>TesseraContextMenu</h3>
+  <ul>
+    <li>Clic droit sur une carte → menu contextuel</li>
+    <li>Attribut HTML : <span class="cls">oncontextmenu="handler"</span></li>
+    <li>Builder Java : <span class="cls">TesseraContextMenu.Builder</span></li>
+    <li>Rendu via <span class="cls">renderTesseraOverlays()</span></li>
+  </ul>
+
+  <h3>TesseraDebugOverlay</h3>
+  <ul>
+    <li>Touche <span class="key">I</span> → toggle overlay</li>
+    <li>Couleurs par profondeur :</li>
+  </ul>
+  <ul style="margin-left:14px;margin-top:4px;">
+    <li style="color:#ff3c3c">Rouge — profondeur 0</li>
+    <li style="color:#3cff3c">Vert — profondeur 1</li>
+    <li style="color:#3c78ff">Bleu — profondeur 2</li>
+    <li style="color:#ffdc3c">Jaune — profondeur 3+</li>
+  </ul>
+</div>
+
+<script>
+let debugOn = false;
+function toggleDebug() {
+  debugOn = !debugOn;
+  const ov = document.getElementById('debugOverlay');
+  ov.classList.toggle('active', debugOn);
+  if (debugOn) drawDebug();
+}
+
+function drawDebug() {
+  const ov = document.getElementById('debugOverlay');
+  const screen = document.getElementById('screen');
+  const sr = screen.getBoundingClientRect();
+  ov.innerHTML = '';
+  const els = [
+    { el: screen.querySelector('.toolbar'), d: 0 },
+    { el: screen.querySelector('.cards-row'), d: 0 },
+    ...Array.from(screen.querySelectorAll('.mc-card')).map(e => ({ el: e, d: 1 })),
+    ...Array.from(screen.querySelectorAll('.card-header')).map(e => ({ el: e, d: 2 })),
+    ...Array.from(screen.querySelectorAll('.card-body')).map(e => ({ el: e, d: 2 })),
+    { el: screen.querySelector('.nested-demo'), d: 0 },
+    { el: screen.querySelector('.nest-l0'), d: 1 },
+    { el: screen.querySelector('.nest-l1'), d: 2 },
+    ...Array.from(screen.querySelectorAll('.nest-l2')).map(e => ({ el: e, d: 3 })),
+  ];
+  els.forEach(({ el, d }) => {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const rect = document.createElement('div');
+    rect.className = 'dbg-rect dbg-' + d;
+    rect.style.left   = (r.left - sr.left) + 'px';
+    rect.style.top    = (r.top  - sr.top)  + 'px';
+    rect.style.width  = r.width  + 'px';
+    rect.style.height = r.height + 'px';
+    ov.appendChild(rect);
+  });
+}
+
+function showCtx(e, name) {
+  e.preventDefault();
+  const menu = document.getElementById('ctxMenu');
+  const screen = document.getElementById('screen');
+  const sr = screen.getBoundingClientRect();
+  document.getElementById('ctxTitle').textContent = 'Carte ' + name;
+  menu.style.left = (e.clientX - sr.left) + 'px';
+  menu.style.top  = (e.clientY - sr.top)  + 'px';
+  menu.classList.add('open');
+}
+function closeCtx() { document.getElementById('ctxMenu').classList.remove('open'); }
+document.getElementById('screen').addEventListener('click', closeCtx);
+</script>
+</body>
+</html>
