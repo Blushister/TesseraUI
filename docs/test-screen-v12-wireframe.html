@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI v1.2 — textarea + position:absolute — Wireframe</title>
+<style>
+/* ── Minecraft-palette reset ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0D0B08;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: "Courier New", monospace;
+  padding: 20px;
+}
+
+/* ── Palette ────────────────────────────────────────────────── */
+:root {
+  --bg0:         #0D0B08;
+  --bg1:         #17120D;
+  --bg2:         #1F1812;
+  --copper-deep: #3A2E22;
+  --copper-lo:   #5A3A1C;
+  --copper:      #A0642C;
+  --copper-hi:   #D89255;
+  --cream:       #F3E7D3;
+  --cream-dim:   #C2AD8E;
+  --mute:        #7A6A55;
+  --mute2:       #5A4A35;
+  --gold:        #E0A84A;
+  --danger:      #C9533D;
+  --good:        #8FB96B;
+  --warn:        #E0A84A;
+}
+
+/* ── Screen panel (444×310) ─────────────────────────────────── */
+.screen {
+  width: 444px;
+  background: var(--bg0);
+  border: 1px solid var(--copper-lo);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screen-title {
+  font-size: 7px;
+  color: var(--copper-hi);
+  line-height: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ── Two-column row ─────────────────────────────────────────── */
+.two-col {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+/* ── Section panel ──────────────────────────────────────────── */
+.sec {
+  background: var(--bg1);
+  border: 1px solid var(--copper-deep);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.sec-title {
+  font-size: 6px;
+  color: var(--copper);
+  line-height: 9px;
+}
+
+/* ── Textarea section ───────────────────────────────────────── */
+.intro  { font-size: 6px; color: var(--mute); line-height: 8px; }
+.hint   { font-size: 5px; color: var(--mute2); line-height: 7px; }
+.note   { font-size: 5px; color: var(--mute2); line-height: 7px; }
+
+textarea, .fake-ta {
+  font-family: "Courier New", monospace;
+  font-size: 7px;
+  color: var(--cream);
+  background: #17120D;
+  border: 1px solid var(--copper);
+  padding: 3px 5px;
+  resize: none;
+  width: 100%;
+  outline: none;
+  line-height: 10px;
+}
+textarea:focus { border-color: var(--copper-hi); }
+.fake-ta.disabled { color: var(--mute2); background: #12100B; border-color: var(--copper-deep); }
+.fake-ta.gold     { border-color: var(--gold); }
+.fake-ta.gold:focus { border-color: #F5C96A; }
+
+.ta-rows-4 { height: 46px; }
+.ta-rows-3 { height: 35px; }
+
+/* cursor blink simulation */
+.cursor::after {
+  content: "▎";
+  color: var(--cream);
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* scrollbar hint */
+.ta-wrap { position: relative; }
+.fake-scrollbar {
+  position: absolute;
+  right: 1px; top: 3px; bottom: 3px;
+  width: 2px;
+  background: #2A1E12;
+}
+.fake-scrollbar::after {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 12px;
+  background: var(--copper-lo);
+}
+
+/* ── Absolute-position section ──────────────────────────────── */
+.card-wrap {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg2);
+  border: 1px solid;
+  border-radius: 4px;
+}
+.cap { font-size: 6px; color: var(--cream); line-height: 8px; }
+.sub { font-size: 5px; color: var(--mute);  line-height: 7px; }
+
+.copper-card { border-color: var(--copper-hi); }
+.danger-card { border-color: var(--danger); }
+.good-card   { border-color: var(--good); }
+.warn-card   { border-color: var(--warn); }
+
+/* Absolutely-positioned overlays */
+.badge {
+  position: absolute;
+  top: 0; right: 0;
+  width: 14px; height: 9px;
+  background: var(--copper-hi);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5px; color: #1A0C04;
+  line-height: 1;
+}
+.badge-danger { background: var(--danger); }
+.pip {
+  position: absolute;
+  bottom: 2px; right: 3px;
+  font-size: 6px; color: var(--good);
+  line-height: 1;
+}
+.overlay-tl {
+  position: absolute;
+  top: 2px; left: 3px;
+  font-size: 5px; color: var(--warn);
+  line-height: 1;
+}
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.legend {
+  margin-top: 24px;
+  width: 444px;
+  background: #100E0A;
+  border: 1px solid var(--copper-deep);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legend h2 { font-size: 9px; color: var(--copper-hi); margin-bottom: 4px; }
+.legend ul { padding-left: 14px; }
+.legend li { font-size: 8px; color: var(--cream-dim); line-height: 14px; }
+.legend li span { color: var(--copper-hi); }
+.pass  { color: #8FB96B !important; }
+.check { color: var(--gold) !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TesseraUI v1.2 — in-game screen wireframe
+     Two equal-width sections inside a 444×310 screen panel
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen">
+
+  <!-- Title bar -->
+  <div class="screen-title">TesseraUI v1.2 — textarea + position:absolute &nbsp;&nbsp; (ESC to close)</div>
+
+  <!-- Two-column body -->
+  <div class="two-col">
+
+    <!-- ── LEFT: textarea section ───────────────────────────── -->
+    <div class="sec">
+      <div class="sec-title">[ textarea ]</div>
+
+      <div class="intro">&lt;textarea&gt; — multi-line input</div>
+
+      <!-- Active textarea with placeholder + cursor -->
+      <div class="ta-wrap">
+        <div class="fake-ta ta-rows-4">
+          <span class="cursor"></span>
+        </div>
+        <div class="fake-scrollbar"></div>
+      </div>
+
+      <div class="hint">↑↓ navigate · Shift+←→ select · Ctrl+A/C/X/V</div>
+
+      <div class="intro" style="margin-top:4px">placeholder + disabled style</div>
+      <div class="fake-ta ta-rows-3 disabled">Disabled / read-only style</div>
+
+      <div class="intro" style="margin-top:4px">custom accent colour</div>
+      <div class="fake-ta ta-rows-3 gold">Gold accent border</div>
+    </div>
+
+    <!-- ── RIGHT: position:absolute section ─────────────────── -->
+    <div class="sec">
+      <div class="sec-title">[ position:absolute ]</div>
+
+      <div class="intro">position:absolute overlays</div>
+
+      <!-- Card 1: copper + NEW badge -->
+      <div class="card-wrap">
+        <div class="card copper-card">
+          <div class="cap">copper card</div>
+          <div class="sub">normal flex content</div>
+        </div>
+        <div class="badge">NEW</div>
+      </div>
+
+      <!-- Card 2: danger + ! badge -->
+      <div class="card-wrap">
+        <div class="card danger-card">
+          <div class="cap">danger card</div>
+          <div class="sub">with absolute badge</div>
+        </div>
+        <div class="badge badge-danger">!</div>
+      </div>
+
+      <!-- Card 3: good + bottom-right pip -->
+      <div class="card-wrap">
+        <div class="card good-card">
+          <div class="cap">good card</div>
+          <div class="sub">bottom-right pip</div>
+        </div>
+        <div class="pip">●</div>
+      </div>
+
+      <!-- Card 4: warn + top-left label -->
+      <div class="card-wrap">
+        <div class="card warn-card">
+          <div class="cap">warn card</div>
+          <div class="sub">top-left label</div>
+        </div>
+        <div class="overlay-tl">v1.2</div>
+      </div>
+
+      <div class="note">Badges use position:absolute — they float outside the flex flow.</div>
+    </div>
+
+  </div><!-- /two-col -->
+</div><!-- /screen -->
+
+
+<!-- ── Acceptance Criteria ──────────────────────────────────── -->
+<div class="legend">
+  <h2>Acceptance Criteria — TesseraUI v1.2</h2>
+  <ul>
+    <li class="check">AC-01 · <span>textarea renders</span> — background, 1px border, correct size from <code>rows</code> attribute</li>
+    <li class="check">AC-02 · <span>placeholder</span> — shown in muted colour when empty + unfocused; hidden on focus or text entry</li>
+    <li class="check">AC-03 · <span>focus ring</span> — border switches to <code>focusBorderColor</code> on click; restored on blur</li>
+    <li class="check">AC-04 · <span>text entry</span> — characters append at cursor; Enter inserts newline; content split by <code>\n</code></li>
+    <li class="check">AC-05 · <span>cursor navigation</span> — ←/→ move by character; ↑/↓ move between lines; Home/End per-line; Ctrl+Home/End to document start/end</li>
+    <li class="check">AC-06 · <span>selection</span> — Shift+navigation selects; selection highlighted per-line; Ctrl+A selects all</li>
+    <li class="check">AC-07 · <span>clipboard</span> — Ctrl+C copies; Ctrl+X cuts; Ctrl+V pastes (preserving newlines)</li>
+    <li class="check">AC-08 · <span>vertical scroll</span> — scrollY clamped every frame so cursor is always visible; scrollbar rendered when content overflows</li>
+    <li class="check">AC-09 · <span>blinking cursor</span> — 500 ms on/off when focused; resets on any keystroke</li>
+    <li class="check">AC-10 · <span>CSS height</span> — explicit <code>height:</code> overrides <code>rows</code> default</li>
+    <li class="check">AC-11 · <span>:focus pseudo-class</span> — <code>textarea:focus { border-color: … }</code> wired to <code>focusBorderColor</code></li>
+    <li class="check">AC-12 · <span>position:absolute routing</span> — child with <code>position:absolute</code> is added via <code>panel.addAbsolute()</code>, not flex flow</li>
+    <li class="check">AC-13 · <span>absolute positioning</span> — top/right/bottom/left resolve relative to padded parent; widget placed each frame</li>
+    <li class="check">AC-14 · <span>absolute overflow</span> — absolute child renders outside scissor clip (drawn after normal children)</li>
+    <li class="check">AC-15 · <span>absolute hit-testing</span> — absolute children receive mouseClicked before flex children (they're on top)</li>
+    <li class="check">AC-16 · <span>textarea tag</span> — <code>"textarea"</code> present in <code>TesseraNode.KNOWN_TAGS</code></li>
+    <li class="check">AC-17 · <span>/tessera test-v12</span> — command registered; opens <code>TesseraTestScreenV12</code></li>
+    <li class="check">AC-18 · <span>state persistence</span> — textarea state tied to <code>inputStates</code> map by id; survives panel rebuilds</li>
+  </ul>
+</div>
+
+</body>
+</html>

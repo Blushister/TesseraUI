@@ -1,0 +1,11 @@
+col { gap: 5px }
+p { font-size: 6px; color: #C2AD8E; white-space: normal }
+p.sec { font-size: 6px; color: #A0642C; margin-top: 4px }
+h3 { font-size: 9px; color: #F3E7D3 }
+li { font-size: 6px; color: #C2AD8E }
+strong { color: #F3E7D3 }
+em { color: #4A8FC9 }
+.reload-banner { font-size: 6px; color: #8FB96B; white-space: normal }
+.hi { color: #D89255 }
+.ul { color: #4A8FC9; text-decoration: underline }
+.lt { color: #C9533D; text-decoration: line-through }

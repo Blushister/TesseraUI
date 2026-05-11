@@ -1,0 +1,80 @@
+.sec {
+  color: #B87333;
+  font-weight: 700;
+  font-size: 7px;
+}
+
+.note {
+  font-size: 6px;
+  color: #94a3b8;
+}
+
+/* Always visible toolbar */
+.toolbar {
+  gap: 4px;
+}
+
+.tool-full {
+  background: #1e3a8a;
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 7px;
+  border: 1px solid #3730a3;
+}
+
+.tool-wide {
+  background: #14532d;
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 7px;
+  border: 1px solid #166534;
+}
+
+.tool-narrow {
+  background: #7f1d1d;
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 7px;
+  border: 1px solid #991b1b;
+  display: none;
+}
+
+/* Wide-only block */
+.wide-block {
+  background: #1e293b;
+  border: 1px solid #3b82f6;
+  padding: 6px 8px;
+  display: none;
+}
+
+.wide-label {
+  color: #93c5fd;
+  font-size: 7px;
+}
+
+/* Narrow-only block */
+.narrow-block {
+  background: #1e293b;
+  border: 1px solid #f97316;
+  padding: 6px 8px;
+  display: none;
+}
+
+.narrow-label {
+  color: #fdba74;
+  font-size: 7px;
+}
+
+/* ── @media rules ─────────────────────────────────────────────── */
+
+/* Narrow layout : échelle IHM 4 sur 1920px (480px) ou scale 3 sur 1280px (427px) */
+@media (max-width: 520px) {
+  .tool-wide    { display: none; }
+  .tool-narrow  { display: flex; }
+  .narrow-block { display: flex; }
+}
+
+/* Wide layout : échelle IHM 3 sur 1920px (640px) ou scale 2 */
+@media (min-width: 521px) {
+  .wide-block { display: flex; }
+}

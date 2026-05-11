@@ -1,0 +1,85 @@
+.sec {
+  color: #B87333;
+  font-weight: 700;
+  font-size: 7px;
+}
+
+.note {
+  font-size: 6px;
+  color: #94a3b8;
+}
+
+/* ── Stack demo ──────────────────────────────────────────────────────────── */
+
+.stack-area {
+  width: 272px;
+  height: 72px;
+  background: #111827;
+  border: 1px solid #374151;
+}
+
+.layer {
+  position: absolute;
+  width: 112px;
+  height: 50px;
+  padding: 5px 7px;
+  border: 1px solid #4b5563;
+  font-size: 7px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.l1 {
+  top: 5px;
+  left: 5px;
+  z-index: 1;
+  background: #7f1d1d;
+}
+
+.l5 {
+  top: 11px;
+  left: 57px;
+  z-index: 5;
+  background: #14532d;
+}
+
+.l10 {
+  top: 17px;
+  left: 109px;
+  z-index: 10;
+  background: #1e3a8a;
+}
+
+/* ── Card with badge overlay ────────────────────────────────────────────── */
+
+.card {
+  width: 200px;
+  height: 54px;
+  background: #1e1e2e;
+  border: 1px solid #4B3832;
+  padding: 5px 8px;
+  gap: 2px;
+}
+
+.card-title {
+  font-size: 7px;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.card-sub {
+  font-size: 6px;
+  color: #94a3b8;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  background: #b45309;
+  color: #ffffff;
+  padding: 2px 4px;
+  font-size: 6px;
+  font-weight: 700;
+}

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI v1.3 — calc() + flexbox — Wireframe</title>
+<style>
+/* ── Minecraft-palette reset ─────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0D0B08;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: "Courier New", monospace;
+  padding: 20px;
+}
+
+/* ── Palette ────────────────────────────────────────────────── */
+:root {
+  --bg0:         #0D0B08;
+  --bg1:         #17120D;
+  --bg2:         #1F1812;
+  --copper-deep: #3A2E22;
+  --copper-lo:   #5A3A1C;
+  --copper:      #A0642C;
+  --copper-hi:   #D89255;
+  --cream:       #F3E7D3;
+  --cream-dim:   #C2AD8E;
+  --mute:        #7A6A55;
+  --mute2:       #5A4A35;
+  --blue:        #4A8FC9;
+  --danger:      #C9533D;
+  --good:        #8FB96B;
+  --warn:        #E0A84A;
+}
+
+/* ── Screen panel (444×320) ─────────────────────────────────── */
+.screen {
+  width: 444px;
+  background: var(--bg0);
+  border: 1px solid var(--copper-lo);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screen-title {
+  font-size: 7px;
+  color: var(--copper-hi);
+  line-height: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ── Two-column row ─────────────────────────────────────────── */
+.two-col {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+/* ── Section panel ──────────────────────────────────────────── */
+.sec {
+  background: var(--bg1);
+  border: 1px solid var(--copper-deep);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.sec-title {
+  font-size: 6px;
+  color: var(--copper);
+  line-height: 9px;
+}
+
+/* ── Shared text styles ──────────────────────────────────────── */
+.intro { font-size: 6px; color: var(--mute);  line-height: 9px; }
+.hint  { font-size: 5px; color: var(--copper-hi); line-height: 8px; }
+.note  { font-size: 5px; color: var(--mute2); line-height: 7px; }
+
+/* ── calc() section ─────────────────────────────────────────── */
+
+/* Each bar uses actual calc() so the wireframe faithfully mirrors in-game layout */
+.bar {
+  height: 8px;
+  border-radius: 3px;
+}
+.full-minus20 { width: calc(100% - 20px); background: var(--copper-hi); }
+.three-q      { width: calc(75%  - 10px); background: var(--danger); }
+.half         { width: calc(50%  - 10px); background: var(--good); }
+.quarter      { width: calc(25%  - 10px); background: var(--blue); }
+
+.tall-box {
+  width:  calc(100% - 20px);
+  height: 40px;          /* fixed for wireframe readability */
+  background: var(--bg2);
+  border: 1px solid var(--copper-hi);
+  border-radius: 4px;
+  margin-top: 2px;
+}
+
+/* ── flexbox section ────────────────────────────────────────── */
+
+.flex-row {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  align-items: stretch;
+  width: 100%;
+}
+.fitem {
+  height: 14px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5px;
+  color: var(--cream);
+}
+.grow1 { flex-grow: 1; background: var(--copper-deep); }
+.grow2 { flex-grow: 2; background: var(--copper-lo); }
+
+.shrink-row {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  width: 100%;
+  overflow: hidden;   /* simulate bounded panel */
+}
+.sitem {
+  height: 14px;
+  border-radius: 3px;
+  font-size: 5px;
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.shrink1 { flex: 0 0 90px; background: var(--danger); }
+.shrink2 { flex: 1 1 90px; background: var(--copper-deep); } /* absorbs overflow */
+
+.basis-row {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  width: 100%;
+}
+.bitem {
+  height: 14px;
+  border-radius: 3px;
+  font-size: 5px;
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.basis80   { flex: 0 0 80px; background: var(--copper); }
+.basis-grow{ flex-grow: 1;   background: var(--copper-hi); }
+
+.order-row {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  width: 100%;
+}
+.oitem {
+  flex: 1;
+  height: 14px;
+  border-radius: 3px;
+  font-size: 5px;
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* DOM: order3 first, order1 second, order2 third
+   CSS order resequences: order1, order2, order3 */
+.order1 { order: 1; background: var(--good); }
+.order2 { order: 2; background: var(--blue); }
+.order3 { order: 3; background: var(--danger); }
+
+/* ── Legend ─────────────────────────────────────────────────── */
+.legend {
+  margin-top: 24px;
+  width: 444px;
+  background: #100E0A;
+  border: 1px solid var(--copper-deep);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legend h2 { font-size: 9px; color: var(--copper-hi); margin-bottom: 4px; }
+.legend ul { padding-left: 14px; }
+.legend li { font-size: 8px; color: var(--cream-dim); line-height: 14px; }
+.legend li span { color: var(--copper-hi); }
+.pass  { color: #8FB96B !important; }
+.check { color: var(--warn) !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TesseraUI v1.3 — calc() + flexbox wireframe
+     Two equal-width sections inside a 444×320 screen panel
+     ═══════════════════════════════════════════════════════════════ -->
+
+<div class="screen">
+
+  <!-- Title bar -->
+  <div class="screen-title">TesseraUI v1.3 — calc() + flex-grow/shrink/basis/order &nbsp;&nbsp;(ESC to close)</div>
+
+  <!-- Two-column body -->
+  <div class="two-col">
+
+    <!-- ── LEFT: calc() section ──────────────────────────────── -->
+    <div class="sec">
+      <div class="sec-title">[ calc() ]</div>
+
+      <div class="intro">calc() — dynamic widths</div>
+
+      <div class="hint">calc(100% - 20px)</div>
+      <div class="bar full-minus20"></div>
+
+      <div class="hint">calc(75% - 10px)</div>
+      <div class="bar three-q"></div>
+
+      <div class="hint">calc(50% - 10px)</div>
+      <div class="bar half"></div>
+
+      <div class="hint">calc(25% - 10px)</div>
+      <div class="bar quarter"></div>
+
+      <div class="intro" style="margin-top:6px">calc() heights</div>
+      <div class="hint">height: calc(50% - 20px)</div>
+      <div class="tall-box"></div>
+
+      <div class="note">
+        calc() resolves % against parent available size at layout time.
+      </div>
+    </div>
+
+    <!-- ── RIGHT: flexbox section ────────────────────────────── -->
+    <div class="sec">
+      <div class="sec-title">[ flexbox ]</div>
+
+      <!-- flex-grow -->
+      <div class="intro">flex-grow — proportional distribution</div>
+      <div class="flex-row">
+        <div class="fitem grow1">1</div>
+        <div class="fitem grow2">2</div>
+        <div class="fitem grow1">1</div>
+      </div>
+
+      <!-- flex-shrink -->
+      <div class="intro">flex-shrink — overflow reduction</div>
+      <div class="shrink-row">
+        <div class="sitem shrink1">no shrink</div>
+        <div class="sitem shrink2">shrinks</div>
+      </div>
+
+      <!-- flex-basis -->
+      <div class="intro">flex-basis — initial size</div>
+      <div class="basis-row">
+        <div class="bitem basis80">basis 80</div>
+        <div class="bitem basis-grow">grow</div>
+      </div>
+
+      <!-- order -->
+      <div class="intro">order — reorder without DOM change</div>
+      <!-- DOM order: order3 · order1 · order2
+           Rendered:  order1 · order2 · order3  (green · blue · red) -->
+      <div class="order-row">
+        <div class="oitem order3">DOM 1 / order 3</div>
+        <div class="oitem order1">DOM 2 / order 1</div>
+        <div class="oitem order2">DOM 3 / order 2</div>
+      </div>
+
+      <div class="note">
+        DOM 1 has order:3, DOM 2 has order:1 — it renders first.
+      </div>
+    </div>
+
+  </div><!-- /two-col -->
+</div><!-- /screen -->
+
+
+<!-- ── Acceptance Criteria ──────────────────────────────────── -->
+<div class="legend">
+  <h2>Acceptance Criteria — TesseraUI v1.3</h2>
+  <ul>
+    <li class="check">AC-01 · <span>calc() width</span> — <code>width: calc(100% - Xpx)</code> resolves against parent <code>availW</code> at layout time</li>
+    <li class="check">AC-02 · <span>calc() height</span> — <code>height: calc(N% ± Xpx)</code> resolves against parent <code>availH</code></li>
+    <li class="check">AC-03 · <span>calc() stored</span> — expression stored in <code>widthCalc</code>/<code>heightCalc</code>; plain <code>width</code> field stays UNSET</li>
+    <li class="check">AC-04 · <span>calc() merge</span> — <code>TesseraStyle.merge()</code> propagates <code>widthCalc</code>/<code>heightCalc</code> correctly</li>
+    <li class="check">AC-05 · <span>flex-grow</span> — free space distributed proportionally to <code>flex-grow</code> weights</li>
+    <li class="check">AC-06 · <span>flex-grow rounding</span> — integer-pixel rounding remainder given to last growing item</li>
+    <li class="check">AC-07 · <span>flex-shrink</span> — overflow reduced proportionally to <code>flex-shrink × baseSize</code></li>
+    <li class="check">AC-08 · <span>flex-shrink:0</span> — item with <code>flex-shrink:0</code> never changes size on overflow</li>
+    <li class="check">AC-09 · <span>flex-basis</span> — explicit px value used as starting size instead of content size</li>
+    <li class="check">AC-10 · <span>flex-basis auto</span> — <code>flex-basis: auto</code> / UNSET → content width/height used as base</li>
+    <li class="check">AC-11 · <span>flex shorthand N</span> — <code>flex: N</code> → grow=N, shrink=1, basis=0 (N&gt;0) or basis=auto (N=0)</li>
+    <li class="check">AC-12 · <span>flex shorthand N M</span> — <code>flex: N M</code> → grow=N, shrink=M, basis=0</li>
+    <li class="check">AC-13 · <span>flex shorthand N M Xpx</span> — <code>flex: 1 1 80px</code> sets all three fields</li>
+    <li class="check">AC-14 · <span>flex: none / auto</span> — keyword shorthands expand correctly</li>
+    <li class="check">AC-15 · <span>order row</span> — items sorted by <code>order</code> value before row layout</li>
+    <li class="check">AC-16 · <span>order column</span> — items sorted by <code>order</code> value before column layout</li>
+    <li class="check">AC-17 · <span>order stable</span> — equal <code>order</code> values preserve DOM insertion order</li>
+    <li class="check">AC-18 · <span>justify-content unchanged</span> — justify-content still works when no flex-grow items present</li>
+    <li class="check">AC-19 · <span>backward compat</span> — old <code>add(widget, int flex)</code> API maps to grow/shrink/basis correctly</li>
+    <li class="check">AC-20 · <span>/tessera test-v13</span> — command registered; opens <code>TesseraTestScreenV13</code></li>
+  </ul>
+</div>
+
+</body>
+</html>

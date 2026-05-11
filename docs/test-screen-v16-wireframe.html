@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TesseraUI v1.6 — transitions CSS — Wireframe</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0D0B08;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; font-family: "Courier New", monospace; padding: 20px;
+}
+:root {
+  --bg0: #0D0B08; --copper-lo: #5A3A1C; --copper-hi: #D89255;
+  --copper: #A0642C; --cream: #F3E7D3; --slate: #94a3b8;
+}
+.screen {
+  width: 380px; background: var(--bg0);
+  border: 1px solid var(--copper-lo); padding: 6px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.screen-title { font-size: 7px; color: var(--copper-hi); line-height: 10px; white-space: nowrap; }
+.content { display: flex; flex-direction: column; gap: 4px; }
+.sec  { font-size: 7px; color: var(--copper); font-weight: bold; line-height: 10px; }
+.note { font-size: 6px; color: var(--slate); line-height: 9px; }
+.demo-row { display: flex; flex-direction: row; gap: 6px; padding: 2px 0; }
+.btn-anim {
+  background: #1e1e2e; border: 1px solid #4B3832;
+  padding: 5px 10px; color: #e2e8f0; font-size: 7px; line-height: 10px;
+  cursor: pointer; transition: background 250ms;
+}
+.btn-anim:hover { background: #3730a3; }
+.btn-danger { border-color: #7f1d1d; }
+.btn-danger:hover { background: #7f1d1d !important; }
+.btn-good { border-color: #14532d; }
+.btn-good:hover { background: #14532d !important; }
+.card-fade {
+  background: #1f2937; border: 1px solid #374151;
+  padding: 6px 10px; color: #e2e8f0; font-size: 7px; line-height: 10px;
+  cursor: pointer; transition: opacity 300ms;
+}
+.card-fade:hover { opacity: 0.4; }
+.combo-btn {
+  background: #1e1e2e; border: 1px solid #5A3A1C;
+  padding: 6px 12px; color: #e2e8f0; font-size: 7px; line-height: 10px;
+  cursor: pointer; transition: background 200ms, border-color 200ms;
+  display: inline-block; align-self: flex-start;
+}
+.combo-btn:hover { background: #78350f; border-color: #D89255; }
+</style>
+</head>
+<body>
+
+<div class="screen">
+  <div class="screen-title">TesseraUI v1.6 — transitions &nbsp;&nbsp;(ESC pour fermer)</div>
+  <div class="content">
+    <p class="sec">[ transition: background 250ms au hover ]</p>
+    <div class="demo-row">
+      <div class="btn-anim">Survole-moi</div>
+      <div class="btn-anim btn-danger">Danger</div>
+      <div class="btn-anim btn-good">Succès</div>
+    </div>
+    <p class="note">Survole les boutons — la couleur interpole progressivement.</p>
+    <p class="sec">[ transition: opacity 300ms au hover ]</p>
+    <div class="demo-row">
+      <div class="card-fade">Carte A</div>
+      <div class="card-fade">Carte B</div>
+      <div class="card-fade">Carte C</div>
+    </div>
+    <p class="sec">[ transition: all 200ms — fond + bordure ]</p>
+    <div class="combo-btn">Hover : fond + bordure animés</div>
+  </div>
+</div>
+
+<div style="margin-top:24px;width:380px;background:#100E0A;border:1px solid #3A2E22;
+            padding:10px 12px;display:flex;flex-direction:column;gap:6px;
+            font-family:'Courier New',monospace;">
+  <h2 style="font-size:9px;color:#D89255;margin-bottom:4px">Acceptance Criteria — TesseraUI v1.6 (transitions)</h2>
+  <ul style="padding-left:14px">
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-01 · <span style="color:#D89255">CSS parsing</span> — <code>transition: background 250ms</code>, <code>all 200ms ease</code>, <code>0.3s</code> parsés → <code>TesseraStyle.transitionDurationMs</code> + <code>transitionProperty</code></li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-02 · <span style="color:#D89255">multi-prop</span> — <code>transition: background 200ms, opacity 300ms</code> → durée max, propriété "all"</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-03 · <span style="color:#D89255">TesseraStyle.merge()</span> — <code>transitionDurationMs</code> et <code>transitionProperty</code> propagés</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-04 · <span style="color:#D89255">TesseraPanel.transition()</span> — fluent setter stocke durée et propriété cible</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-05 · <span style="color:#D89255">lerpColor()</span> — interpole chaque canal ARGB séparément ; t=0→from, t=1→to</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-06 · <span style="color:#D89255">hover state change</span> — bascule de hovered repart depuis la valeur courante interpolée</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-07 · <span style="color:#D89255">background transition</span> — <code>transition: background Nms</code> interpole <code>background↔hoverBackground</code></li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-08 · <span style="color:#D89255">opacity transition</span> — <code>transition: opacity Nms</code> interpole l'opacité</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-09 · <span style="color:#D89255">all transition</span> — <code>transition: all Nms</code> anime background + border-color + opacity</li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-10 · <span style="color:#D89255">renderer wiring</span> — <code>TesseraTemplateRenderer</code> appelle <code>panel.transition()</code> si <code>transitionDurationMs &gt; 0</code></li>
+    <li style="font-size:8px;color:#C2AD8E;line-height:14px">AC-11 · <span style="color:#D89255">/tessera test-v16</span> — commande enregistrée, ouvre <code>TesseraTestScreenV16</code></li>
+  </ul>
+</div>
+
+</body>
+</html>

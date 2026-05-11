@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TesseraUI v1.1 — border-radius Wireframe</title>
+  <style>
+    /* ── Copper Patina palette ── */
+    :root {
+      --bg0:         #17120d;
+      --bg1:         #1f1812;
+      --bg2:         #2a2019;
+      --bg3:         #362a20;
+      --copper-hi:   #f0b27a;
+      --copper:      #d89255;
+      --copper-lo:   #a0642c;
+      --copper-deep: #5a3a1c;
+      --cream:       #f3e7d3;
+      --cream-dim:   #c2ad8e;
+      --mute:        #7a6a55;
+      --good:        #8fb96b;
+      --warn:        #e0a84a;
+      --danger:      #c9533d;
+      --line:        #5a3a1c;
+      --dark-bg:     #0d0a07;
+      --cell-bg:     #120f0a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0b09;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      font-family: 'Courier New', monospace;
+      color: var(--cream);
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: var(--copper-hi);
+      font-size: 14px;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      color: var(--mute);
+      font-size: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Feature badges ── */
+    .badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .badge {
+      font-size: 9px;
+      padding: 2px 8px;
+      border: 1px solid;
+      font-family: monospace;
+    }
+    .badge.new  { border-color: var(--good);  color: var(--good);  background: #0d1a08; }
+    .badge.done { border-color: var(--copper); color: var(--copper); background: #1a1008; }
+
+    /* ── Screen mockup ── */
+    .screen {
+      width: 444px;
+      background: var(--bg0);
+      border: 1px solid var(--copper-lo);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .screen-title {
+      height: 10px;
+      font-size: 7px;
+      color: var(--copper-hi);
+      line-height: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* ── Row layout ── */
+    .row-layout { display: flex; gap: 4px; align-items: flex-start; }
+
+    /* ── Section card ── */
+    .section {
+      background: var(--bg1);
+      border: 1px solid var(--copper-deep);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      overflow: hidden;
+    }
+    .section-title {
+      font-size: 6px;
+      color: var(--copper);
+      height: 9px;
+      line-height: 9px;
+      white-space: nowrap;
+    }
+
+    /* ── Generic helpers ── */
+    .lbl  { font-size: 7px; color: var(--cream);     line-height: 9px; }
+    .lbl6 { font-size: 6px; color: var(--cream-dim); line-height: 8px; }
+    .intro { font-size: 6px; color: var(--mute);     line-height: 8px; }
+
+    /* ══ RADIUS PROGRESSION section ════════════════════════════════════════ */
+    .rbox {
+      padding: 3px 5px;
+      background: var(--bg1);
+      border: 1px solid var(--copper-deep);
+      display: flex;
+      align-items: center;
+    }
+    .rbox .lbl6 { color: var(--cream-dim); }
+    /* Increasing corner radii */
+    .r0  { border-radius: 0;    border-color: #3a2e22; }
+    .r2  { border-radius: 2px;  border-color: #5a3a1c; }
+    .r4  { border-radius: 4px;  border-color: #a0642c; }
+    .r6  { border-radius: 6px;  border-color: #d89255; }
+    .r8  { border-radius: 8px;  border-color: #f0b27a; }
+    .r12 { border-radius: 12px; border-color: #f3e7d3; }
+
+    /* ══ BORDER COMBINATIONS section ════════════════════════════════════════ */
+    .bcombo {
+      padding: 3px 5px;
+      display: flex;
+      align-items: center;
+    }
+    .bg-only   { background: var(--bg3);  border-radius: 4px; }
+    .thin      { background: var(--bg1);  border: 1px solid var(--line);      border-radius: 4px; }
+    .thick     { background: var(--bg1);  border: 2px solid var(--copper-deep); border-radius: 6px; }
+    .b-copper  { background: #1a1008;     border: 1px solid var(--copper);    border-radius: 5px; }
+    .b-danger  { background: #1a0a08;     border: 1px solid var(--danger);    border-radius: 4px; }
+    .b-good    { background: #0d1a08;     border: 1px solid var(--good);      border-radius: 3px; }
+
+    /* ══ CARD GRID section ══════════════════════════════════════════════════ */
+    .card-row {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    .rcard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 4px;
+      background: var(--bg1);
+      border: 1px solid;
+      border-radius: 5px;
+      width: 64px;
+    }
+    .rcard .cap { font-size: 6px; color: var(--cream);     line-height: 8px; }
+    .rcard .sub { font-size: 5px; color: var(--mute);      line-height: 7px; }
+    .c-copper { border-color: var(--copper); }
+    .c-danger { border-color: var(--danger); }
+    .c-good   { border-color: var(--good);  }
+    .c-warn   { border-color: var(--warn);  }
+    .c-mute   { border-color: var(--mute);  }
+    .card-note { font-size: 6px; color: var(--mute); line-height: 1.3; }
+
+    /* ══ Validation table ════════════════════════════════════════════════════ */
+    .validation {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 36px;
+    }
+    .validation h2 {
+      color: var(--copper-hi);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+    table.vtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+    table.vtable th {
+      background: var(--bg2);
+      color: var(--copper);
+      padding: 6px 10px;
+      text-align: left;
+      border: 1px solid var(--copper-deep);
+    }
+    table.vtable td {
+      padding: 5px 10px;
+      border: 1px solid var(--copper-deep);
+      color: var(--cream-dim);
+      background: var(--bg1);
+      vertical-align: top;
+    }
+    table.vtable td.feature  { color: var(--copper-hi); font-weight: bold; }
+    table.vtable td.expected { color: var(--good); }
+    table.vtable td.bug      { color: var(--danger); }
+    table.vtable code { color: var(--warn); font-family: monospace; background: #0a0806; padding: 0 3px; }
+
+    .legend { display: flex; gap: 16px; margin-top: 8px; font-size: 10px; }
+    .legend span { color: var(--mute); }
+    .legend .ok  { color: var(--good); }
+    .legend .bad { color: var(--danger); }
+
+    .cmds { margin-top: 16px; font-size: 10px; color: var(--mute); }
+    .cmds code { color: var(--warn); font-family: monospace; }
+  </style>
+</head>
+<body>
+
+<h1>TesseraUI v1.1 — border-radius Wireframe</h1>
+<p class="subtitle">Interactive mockup · <code>/tessera test-radius</code> in-game</p>
+
+<div class="badge-row">
+  <span class="badge new">border-radius: &lt;n&gt;px</span>
+  <span class="badge new">radius + border combo</span>
+  <span class="badge new">scanline fillRounded()</span>
+  <span class="badge new">double-fill border</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════ SCREEN MOCKUP ═══ -->
+<div class="screen">
+
+  <div class="screen-title">TesseraUI v1.1 — border-radius &nbsp;&nbsp;&nbsp;(ESC to close)</div>
+
+  <!-- ── Top row (168 px): radius progression | border combinations ─────── -->
+  <div class="row-layout" style="min-height:168px">
+
+    <!-- ── Section 1 : radius progression ── -->
+    <div class="section" style="flex:1">
+      <div class="section-title">[ radius progression ]</div>
+      <div class="intro">border-radius: 0 → 2 → 4 → 6 → 8 → 12</div>
+      <div class="rbox r0" ><span class="lbl6">radius: 0px (square)</span></div>
+      <div class="rbox r2" ><span class="lbl6">radius: 2px</span></div>
+      <div class="rbox r4" ><span class="lbl6">radius: 4px</span></div>
+      <div class="rbox r6" ><span class="lbl6">radius: 6px</span></div>
+      <div class="rbox r8" ><span class="lbl6">radius: 8px</span></div>
+      <div class="rbox r12"><span class="lbl6">radius: 12px (pill)</span></div>
+    </div>
+
+    <!-- ── Section 2 : radius + border combos ── -->
+    <div class="section" style="flex:1">
+      <div class="section-title">[ radius + border combos ]</div>
+      <div class="intro">radius + border combinations</div>
+      <div class="bcombo bg-only"><span class="lbl6">bg only, radius 4px</span></div>
+      <div class="bcombo thin"   ><span class="lbl6">1px border, radius 4px</span></div>
+      <div class="bcombo thick"  ><span class="lbl6">2px border, radius 6px</span></div>
+      <div class="bcombo b-copper"><span class="lbl6">copper border, radius 5px</span></div>
+      <div class="bcombo b-danger"><span class="lbl6">danger border, radius 4px</span></div>
+      <div class="bcombo b-good"  ><span class="lbl6">good border, radius 3px</span></div>
+    </div>
+
+  </div><!-- /top row -->
+
+  <!-- ── Bottom row (100 px): card grid ──────────────────────────────────── -->
+  <div class="section" style="width:100%">
+    <div class="section-title">[ border-radius on cards — 5 palette accents ]</div>
+    <div class="card-row">
+      <div class="rcard c-copper">
+        <span class="cap">copper</span>
+        <span class="sub">#D89255 · r=5</span>
+      </div>
+      <div class="rcard c-danger">
+        <span class="cap">danger</span>
+        <span class="sub">#C9533D · r=5</span>
+      </div>
+      <div class="rcard c-good">
+        <span class="cap">good</span>
+        <span class="sub">#8FB96B · r=5</span>
+      </div>
+      <div class="rcard c-warn">
+        <span class="cap">warn</span>
+        <span class="sub">#E0A84A · r=5</span>
+      </div>
+      <div class="rcard c-mute">
+        <span class="cap">mute</span>
+        <span class="sub">#7A6A55 · r=5</span>
+      </div>
+    </div>
+    <div class="card-note">
+      Cards above use border-radius:5px + per-card accent border colour.
+    </div>
+  </div>
+
+</div><!-- /screen -->
+
+
+<!-- ══════════════════════════════════════════════════ VALIDATION ════════ -->
+<div class="validation">
+  <h2>Acceptance Criteria — border-radius</h2>
+  <table class="vtable">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Given / When</th>
+        <th>Expected</th>
+        <th>Bug symptom</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- ── SCANLINE RENDERING ── -->
+      <tr>
+        <td class="feature">Rounded corners appear</td>
+        <td><code>border-radius: 4px</code> on a div with background</td>
+        <td class="expected">The four corners of the fill are clipped; the panel visually has rounded corners</td>
+        <td class="bug">Panel still renders as a sharp rectangle / corners not clipped</td>
+      </tr>
+      <tr>
+        <td class="feature">Radius = 0 is identical to no radius</td>
+        <td><code>border-radius: 0</code> (or no property set)</td>
+        <td class="expected">Panel renders as a plain rectangle, no performance difference</td>
+        <td class="bug">Small corner arcs appear / flickering at corners</td>
+      </tr>
+      <tr>
+        <td class="feature">Radius clamped to half dimension</td>
+        <td><code>border-radius: 100px</code> on a 40×20 panel</td>
+        <td class="expected">Radius clamped to 10 px (half of min dimension); renders as a pill shape</td>
+        <td class="bug">Radius overflows / rendering glitch / negative arc</td>
+      </tr>
+      <tr>
+        <td class="feature">Scanline per-row accuracy</td>
+        <td>Panel at small size (e.g. 20×10) with radius 4</td>
+        <td class="expected">Arc is smooth (no single-pixel spikes or gaps) at MC pixel resolution</td>
+        <td class="bug">Jagged corners / stray filled pixels outside the arc boundary</td>
+      </tr>
+
+      <!-- ── BACKGROUND + BORDER DOUBLE-FILL ── -->
+      <tr>
+        <td class="feature">Background fills inside arc</td>
+        <td>Panel with <code>background: #1F1812; border-radius: 5px</code>, no border</td>
+        <td class="expected">Background color fills the rounded rect; areas outside arc are transparent</td>
+        <td class="bug">Background fills entire bounding box (square)</td>
+      </tr>
+      <tr>
+        <td class="feature">Border drawn as outer rounded rect</td>
+        <td>Panel with <code>border: 1px solid #D89255; border-radius: 5px</code></td>
+        <td class="expected">Rounded border traces the outer arc; background inset by 1 px fills inner arc</td>
+        <td class="bug">Border is square / border outside rounded bg / seam visible</td>
+      </tr>
+      <tr>
+        <td class="feature">Thick border inner radius reduced</td>
+        <td><code>border: 2px solid …; border-radius: 6px</code></td>
+        <td class="expected">Inner background arc has radius 4 (6 − 2); no gap between border and bg</td>
+        <td class="bug">Gap between border arc and background / inner radius same as outer</td>
+      </tr>
+      <tr>
+        <td class="feature">Background-only (no border) still rounds</td>
+        <td>Panel with <code>border-radius: 4px</code>, no <code>border</code> CSS</td>
+        <td class="expected">Only the background rounded rect is drawn; no border artifact</td>
+        <td class="bug">Thin phantom border rendered / extra 1px outline</td>
+      </tr>
+
+      <!-- ── CSS INTEGRATION ── -->
+      <tr>
+        <td class="feature">border-radius parsed from CSS</td>
+        <td><code>.card { border-radius: 4px }</code> in template CSS</td>
+        <td class="expected"><code>TesseraStyle.borderRadius == 4</code> after parsing; panel gets the radius</td>
+        <td class="bug">borderRadius stays UNSET / parsed as 0 / ignored in renderer</td>
+      </tr>
+      <tr>
+        <td class="feature">border-radius parsed without px unit</td>
+        <td><code>border-radius: 6</code> (bare integer)</td>
+        <td class="expected">Parsed as 6 px, same result as <code>6px</code></td>
+        <td class="bug">Parsed as 0 / exception thrown</td>
+      </tr>
+      <tr>
+        <td class="feature">border-radius inherits through TesseraStyle.merge()</td>
+        <td>Base style has <code>borderRadius = 3</code>; override style leaves it UNSET</td>
+        <td class="expected">Merged style keeps <code>borderRadius = 3</code> from base</td>
+        <td class="bug">Merged style resets borderRadius to UNSET / to 0</td>
+      </tr>
+      <tr>
+        <td class="feature">border-radius in CSS variable</td>
+        <td><code>:root { --r: 5px } .card { border-radius: var(--r) }</code></td>
+        <td class="expected">Variable resolved to 5; panel rendered with radius 5</td>
+        <td class="bug">Variable not resolved / borderRadius = 0</td>
+      </tr>
+
+      <!-- ── SQUARE BORDER UNCHANGED ── -->
+      <tr>
+        <td class="feature">Square-border panels unaffected</td>
+        <td>Panel with <code>border: 1px solid …</code> and NO <code>border-radius</code></td>
+        <td class="expected">Border renders as four flat <code>g.fill()</code> lines — unchanged from v1.0</td>
+        <td class="bug">Panel corners rounded when borderRadius was never set</td>
+      </tr>
+      <tr>
+        <td class="feature">Side borders (borderTop/Left/…) unaffected by radius</td>
+        <td>Panel with <code>border-top: 1px solid …</code> and <code>border-radius: 4px</code></td>
+        <td class="expected">Side-specific border lines are suppressed (radius > 0 path skips square lines)</td>
+        <td class="bug">Square border lines drawn on top of rounded arc / double border</td>
+      </tr>
+
+      <!-- ── CARD GRID ── -->
+      <tr>
+        <td class="feature">Rounded cards in flex row</td>
+        <td>Five cards with <code>width:64px; border-radius:5px</code> in a row</td>
+        <td class="expected">All five cards visible side-by-side with rounded corners and correct accent border color</td>
+        <td class="bug">Cards clipped / square corners / border color missing</td>
+      </tr>
+      <tr>
+        <td class="feature">Children inside rounded panel not clipped</td>
+        <td>Label inside a rounded card (no <code>overflow:hidden</code>)</td>
+        <td class="expected">Label text renders normally; rounding applies only to background/border, not to child scissor</td>
+        <td class="bug">Text cut by rounded clip / text invisible</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <div class="legend">
+    <span>Legend:</span>
+    <span class="ok">■ Expected = correct in-game behavior</span>
+    <span class="bad">■ Bug = what to look for if broken</span>
+  </div>
+
+  <div class="cmds">
+    Commands:
+    <code>/tessera test</code> ·
+    <code>/tessera test-medium</code> ·
+    <code>/tessera test-low</code> ·
+    <code>/tessera test-html</code> ·
+    <code>/tessera test-table</code> ·
+    <code>/tessera test-radius</code>
+  </div>
+</div>
+
+</body>
+</html>

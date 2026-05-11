@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TesseraUI v1.1 — Test Screen Wireframe</title>
+<style>
+  /* ── Copper Patina Palette ──────────────────────────────────────── */
+  :root {
+    --bg0:        #17120D;
+    --bg1:        #1F1812;
+    --bg2:        #2A2019;
+    --bg3:        #362A20;
+    --copper-hi:  #F0B27A;
+    --copper:     #D89255;
+    --copper-lo:  #A0642C;
+    --copper-deep:#5A3A1C;
+    --cream:      #F3E7D3;
+    --cream-dim:  #C2AD8E;
+    --mute:       #7A6A55;
+    --good:       #8FB96B;
+    --warn:       #E0A84A;
+    --danger:     #C9533D;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0D0A07;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    font-family: 'Courier New', monospace;
+    color: var(--cream);
+    gap: 40px;
+    min-height: 100vh;
+  }
+
+  h1 {
+    color: var(--copper-hi);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* ── Main Panel ─────────────────────────────────────────────────── */
+  .mc-screen {
+    background: #1a1510;
+    padding: 20px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 700px;
+  }
+
+  .panel {
+    background: var(--bg0);
+    border: 1px solid var(--copper-lo);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-title {
+    color: var(--copper-hi);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--copper-deep);
+  }
+
+  /* ── Rows ───────────────────────────────────────────────────────── */
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  /* ── Section cards ──────────────────────────────────────────────── */
+  .section {
+    background: var(--bg1);
+    border: 1px solid var(--copper-deep);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .section-title {
+    color: var(--copper);
+    font-size: 9px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--copper-deep);
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+  }
+
+  /* ── Labels ─────────────────────────────────────────────────────── */
+  .lbl        { font-size: 9px; color: var(--cream-dim); line-height: 1.5; }
+  .lbl-ok     { font-size: 9px; color: var(--good);      line-height: 1.5; }
+  .lbl-bad    { font-size: 9px; color: var(--danger);     line-height: 1.5; }
+  .lbl-mute   { font-size: 9px; color: var(--mute);       line-height: 1.5; }
+  .lbl-warn   { font-size: 9px; color: var(--warn);       line-height: 1.5; }
+  .lbl-good   { font-size: 9px; color: var(--good);       line-height: 1.5; }
+  .lbl-copper { font-size: 9px; color: var(--copper-hi);  line-height: 1.5; font-weight: bold; }
+
+  .hidden-slot {
+    font-size: 9px;
+    color: var(--mute);
+    line-height: 1.5;
+    border: 1px dashed var(--copper-deep);
+    padding: 1px 4px;
+    opacity: 0.5;
+    font-style: italic;
+  }
+
+  .absent { display: none; }
+
+  /* ── Buttons ─────────────────────────────────────────────────────── */
+  .btn {
+    background: var(--bg2);
+    border: 1px solid var(--copper-deep);
+    color: var(--cream-dim);
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    padding: 3px 8px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: background 0.1s, color 0.1s;
+    letter-spacing: 0.5px;
+  }
+  .btn:hover  { background: var(--bg3); color: var(--copper-hi); border-color: var(--copper-lo); }
+  .btn:active { background: var(--copper-deep); }
+
+  /* ── Checkbox ────────────────────────────────────────────────────── */
+  .cb-row { display: flex; align-items: center; gap: 8px; }
+
+  .mc-checkbox {
+    width: 12px; height: 12px;
+    background: #2A2A2A;
+    border: 1px solid #888;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mc-checkbox.checked::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--copper-hi);
+    display: block;
+  }
+  .mc-checkbox:hover { border-color: var(--copper-lo); }
+
+  /* ── Slider ──────────────────────────────────────────────────────── */
+  .mc-slider-wrap { display: flex; flex-direction: column; gap: 4px; }
+
+  .mc-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: #3A3A3A;
+    outline: none;
+    cursor: pointer;
+  }
+  .mc-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 6px; height: 14px;
+    background: var(--copper-hi);
+    cursor: pointer;
+    border: none;
+  }
+  .mc-slider::-moz-range-thumb {
+    width: 6px; height: 14px;
+    background: var(--copper-hi);
+    cursor: pointer;
+    border: none;
+  }
+  .mc-slider::-webkit-slider-runnable-track {
+    background: linear-gradient(
+      to right,
+      var(--copper-lo) 0%,
+      var(--copper-lo) var(--fill),
+      #3A3A3A var(--fill),
+      #3A3A3A 100%
+    );
+  }
+
+  /* ── Margin demo ─────────────────────────────────────────────────── */
+  .margin-demo {
+    display: flex;
+    align-items: center;
+    background: var(--bg0);
+    padding: 4px;
+    border: 1px solid var(--copper-deep);
+    min-height: 30px;
+    gap: 0;
+  }
+
+  .box {
+    background: #3A2A1E;
+    color: var(--copper-hi);
+    font-size: 9px;
+    width: 22px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--copper-deep);
+    flex-shrink: 0;
+  }
+  .box-b { margin: 5px; }
+  .box-c { margin-left: 12px; }
+
+  /* ── Event log ───────────────────────────────────────────────────── */
+  .event-log {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+    border-top: 1px solid var(--copper-deep);
+  }
+  .event-label { font-size: 9px; color: var(--mute); }
+  .event-value { font-size: 9px; color: var(--good); font-weight: bold; }
+
+  /* ── Legend / annotations ────────────────────────────────────────── */
+  .annotation {
+    position: relative;
+  }
+  .annotation::after {
+    content: attr(data-note);
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translate(100%, -50%);
+    font-size: 8px;
+    color: var(--mute);
+    white-space: nowrap;
+    padding-left: 6px;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* ── Status badge ────────────────────────────────────────────────── */
+  .status-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: -8px;
+  }
+  .badge {
+    font-size: 8px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', monospace;
+  }
+  .badge-ok   { background: #1a2e12; color: var(--good);   border: 1px solid #2a4a1e; }
+  .badge-info { background: #1a1f2e; color: #7aA8C8;        border: 1px solid #2a3a4e; }
+  .badge-warn { background: #2e200a; color: var(--warn);   border: 1px solid #4e3a1a; }
+
+  /* ── Separator ───────────────────────────────────────────────────── */
+  hr { border: none; border-top: 1px solid var(--copper-deep); opacity: 0.3; }
+</style>
+</head>
+<body>
+
+<h1>TesseraUI v1.1 — /tessera test — Wireframe interactif</h1>
+
+<div class="status-row">
+  <span class="badge badge-ok">BUILD SUCCESSFUL</span>
+  <span class="badge badge-info">NeoForge 1.21.1.221</span>
+  <span class="badge badge-info">Java 21</span>
+  <span class="badge badge-ok">v-if ✓</span>
+  <span class="badge badge-ok">v-show ✓</span>
+  <span class="badge badge-ok">margin ✓</span>
+  <span class="badge badge-ok">checkbox ✓</span>
+  <span class="badge badge-ok">slider ✓</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  ECRAN DE TEST (interactif)                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="mc-screen">
+
+  <div class="panel">
+
+    <!-- Titre -->
+    <div class="panel-title">TesseraUI v1.1 — Dev Test Screen &nbsp;&nbsp;&nbsp; (ESC to close)</div>
+
+    <!-- Ligne 1 : v-if | v-show | margin -->
+    <div class="row">
+
+      <!-- v-if -->
+      <div class="section">
+        <div class="section-title">[ v-if ]</div>
+        <div class="lbl" id="vif-state">flag=<span id="vif-val">false</span></div>
+        <div class="lbl-ok"  id="vif-visible" style="display:none">visible (flag=true)</div>
+        <div class="lbl-bad" id="vif-bug"     style="display:none">BUG: should not render</div>
+        <div class="lbl-mute" id="vif-hint">← aucun widget (v-if=false)</div>
+        <button class="btn" onclick="toggleVif()">flag=false &nbsp;[toggle]</button>
+      </div>
+
+      <!-- v-show -->
+      <div class="section">
+        <div class="section-title">[ v-show ]</div>
+        <div class="lbl" id="vshow-state">show=<span id="vshow-val">false</span></div>
+        <!-- slot toujours présent dans le DOM, juste invisible -->
+        <div class="hidden-slot" id="vshow-slot">[space reserved here]</div>
+        <div class="lbl-warn" id="vshow-gap-check">↑ gap preserved?</div>
+        <div class="lbl">always here</div>
+        <button class="btn" onclick="toggleVshow()">show=false &nbsp;[toggle]</button>
+      </div>
+
+      <!-- margin -->
+      <div class="section">
+        <div class="section-title">[ margin ]</div>
+        <div class="lbl-mute">A → no margin</div>
+        <div class="lbl-mute">B → margin: 3px</div>
+        <div class="lbl-mute">C → margin-left: 8px</div>
+        <div class="margin-demo">
+          <div class="box">A</div>
+          <div class="box box-b">B</div>
+          <div class="box box-c">C</div>
+        </div>
+      </div>
+
+    </div><!-- /row 1 -->
+
+    <!-- Ligne 2 : checkbox | slider -->
+    <div class="row">
+
+      <!-- checkbox -->
+      <div class="section">
+        <div class="section-title">[ checkbox ]</div>
+        <div class="cb-row">
+          <div class="mc-checkbox checked" id="cb-fog" onclick="toggleCheckbox('fog')"></div>
+          <span class="lbl">fog=<span id="fog-val">true</span></span>
+        </div>
+        <div class="cb-row">
+          <div class="mc-checkbox" id="cb-music" onclick="toggleCheckbox('music')"></div>
+          <span class="lbl">music=<span id="music-val">false</span></span>
+        </div>
+      </div>
+
+      <!-- slider -->
+      <div class="section">
+        <div class="section-title">[ slider ]</div>
+        <div class="lbl-copper">vol: <span id="vol-display">50</span></div>
+        <div class="mc-slider-wrap">
+          <input type="range" class="mc-slider" id="vol-slider"
+                 min="0" max="100" value="50"
+                 style="--fill: 50%"
+                 oninput="onSliderInput(this)"
+                 onchange="onSliderRelease(this)">
+        </div>
+        <div class="lbl-mute">drag → release → fires oninput handler</div>
+      </div>
+
+    </div><!-- /row 2 -->
+
+    <!-- Event log -->
+    <div class="event-log">
+      <span class="event-label">Last event:</span>
+      <span class="event-value" id="event-log">none</span>
+    </div>
+
+  </div><!-- /panel -->
+</div><!-- /mc-screen -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!--  LEGENDE COMPORTEMENTS ATTENDUS                                    -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div style="max-width:700px;width:100%;display:flex;flex-direction:column;gap:12px">
+
+  <div style="font-size:10px;color:var(--copper);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--copper-deep);padding-bottom:6px">
+    Comportements attendus à valider in-game
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:9px;font-family:'Courier New',monospace">
+    <thead>
+      <tr style="color:var(--mute);border-bottom:1px solid var(--copper-deep)">
+        <th style="text-align:left;padding:4px 8px;width:15%">Feature</th>
+        <th style="text-align:left;padding:4px 8px;width:28%">Action</th>
+        <th style="text-align:left;padding:4px 8px;width:30%">Attendu</th>
+        <th style="text-align:left;padding:4px 8px;width:27%">Signe de bug</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #1a1510">
+        <td style="padding:5px 8px;color:var(--copper-hi)">v-if</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Toggle flag=false→true</td>
+        <td style="padding:5px 8px;color:var(--good)">Label "visible" apparaît, "always here" remonte</td>
+        <td style="padding:5px 8px;color:var(--danger)">Widget "BUG" visible, ou espace blanc résiduel</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1a1510">
+        <td style="padding:5px 8px;color:var(--copper-hi)">v-show</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Toggle show=false→true</td>
+        <td style="padding:5px 8px;color:var(--good)">"space reserved" devient visible, "always here" NE BOUGE PAS</td>
+        <td style="padding:5px 8px;color:var(--danger)">"always here" remonte quand show=false (= v-if, pas v-show)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1a1510">
+        <td style="padding:5px 8px;color:var(--copper-hi)">margin</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Observer A/B/C</td>
+        <td style="padding:5px 8px;color:var(--good)">B décalé 3px de A, C décalé 8px supplémentaires à gauche</td>
+        <td style="padding:5px 8px;color:var(--danger)">Tous alignés identiquement (marges ignorées)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1a1510">
+        <td style="padding:5px 8px;color:var(--copper-hi)">checkbox</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Cliquer fog/music</td>
+        <td style="padding:5px 8px;color:var(--good)">Case toggle, label mis à jour, last event = "fog=false"</td>
+        <td style="padding:5px 8px;color:var(--danger)">Clic ignoré, ou label pas mis à jour</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1a1510">
+        <td style="padding:5px 8px;color:var(--copper-hi)">slider</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Drag + relâcher</td>
+        <td style="padding:5px 8px;color:var(--good)">Thumb suit le drag, last event = "vol=67" au release</td>
+        <td style="padding:5px 8px;color:var(--danger)">Thumb ne bouge pas au drag (mouseDragged non forwardé)</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 8px;color:var(--copper-hi)">display:none</td>
+        <td style="padding:5px 8px;color:var(--cream-dim)">Template CSS style="display:none"</td>
+        <td style="padding:5px 8px;color:var(--good)">Widget absent, aucun espace réservé</td>
+        <td style="padding:5px 8px;color:var(--danger)">Widget visible ou espace blanc</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<script>
+  // ── state ──────────────────────────────────────────────────────────
+  const state = { vif: false, vshow: false, fog: true, music: false, vol: 50 };
+
+  function log(msg) { document.getElementById('event-log').textContent = msg; }
+
+  // ── v-if ───────────────────────────────────────────────────────────
+  function toggleVif() {
+    state.vif = !state.vif;
+    document.getElementById('vif-val').textContent = state.vif;
+    document.getElementById('vif-visible').style.display = state.vif ? 'block' : 'none';
+    document.getElementById('vif-bug').style.display     = 'none'; // jamais visible
+    document.getElementById('vif-hint').textContent = state.vif
+      ? '← widget présent (v-if=true)'
+      : '← aucun widget (v-if=false)';
+    document.querySelector('[onclick="toggleVif()"]').textContent =
+      'flag=' + state.vif + '  [toggle]';
+    log('v-if flag → ' + state.vif);
+  }
+
+  // ── v-show ─────────────────────────────────────────────────────────
+  function toggleVshow() {
+    state.vshow = !state.vshow;
+    document.getElementById('vshow-val').textContent = state.vshow;
+    const slot = document.getElementById('vshow-slot');
+    // v-show : toujours dans le DOM, juste visibility
+    slot.style.visibility = state.vshow ? 'visible' : 'hidden';
+    slot.style.opacity     = state.vshow ? '1'       : '0';
+    // Le texte change selon visibilité
+    slot.textContent = state.vshow ? '[space reserved here] ← visible' : '[space reserved here]';
+    document.querySelector('[onclick="toggleVshow()"]').textContent =
+      'show=' + state.vshow + '  [toggle]';
+    log('v-show → ' + state.vshow);
+  }
+
+  // ── checkbox ────────────────────────────────────────────────────────
+  function toggleCheckbox(which) {
+    state[which] = !state[which];
+    const cb = document.getElementById('cb-' + which);
+    if (state[which]) cb.classList.add('checked');
+    else              cb.classList.remove('checked');
+    document.getElementById(which + '-val').textContent = state[which];
+    log(which + '=' + state[which]);
+  }
+
+  // ── slider ──────────────────────────────────────────────────────────
+  function onSliderInput(el) {
+    // Met à jour la track colorée pendant le drag
+    el.style.setProperty('--fill', el.value + '%');
+  }
+
+  function onSliderRelease(el) {
+    // Simule le Consumer<String> appelé au mouseReleased
+    state.vol = parseInt(el.value);
+    document.getElementById('vol-display').textContent = state.vol;
+    log('vol=' + state.vol);
+  }
+
+  // Init : appliquer l'état initial
+  document.getElementById('vshow-slot').style.visibility = 'hidden';
+  document.getElementById('vshow-slot').style.opacity = '0';
+</script>
+</body>
+</html>
