@@ -86,6 +86,9 @@ public class TesseraPanel implements TesseraWidget {
     private boolean visible = true;
     private String tooltip = null;
 
+    /** Pending children swap requested from a reactive model listener (runs on next render). */
+    private List<Entry> pendingChildren = null;
+
     // ── Hover transition animation state ─────────────────────────────────────
     private int     transitionDurationMs = 0;    // set from style in transition()
     private String  transitionProperty   = null;
@@ -94,6 +97,19 @@ public class TesseraPanel implements TesseraWidget {
     private int     animFromBg           = 0, animToBg = 0;
     private float   animFromOpacity      = 1f, animToOpacity = 1f;
     private int     animFromBorder       = 0, animToBorder   = 0;
+    private int     animFromColor        = 0, animToColor    = 0;
+
+    // ── Drag & Drop ────────────────────────────────────────────────────────────
+    private boolean         draggable        = false;
+    private Object          dragPayload      = null;
+    private TesseraDropZone dropZoneHandler  = null;
+
+    // ── Right-click ───────────────────────────────────────────────────────────
+    private Runnable onRightClick = null;
+
+    // ── Hover text color ──────────────────────────────────────────────────────
+    private int     hoverTextColor    = 0;
+    private boolean hoverTextColorSet = false;
 
     private TesseraPanel(Mode mode, int cols, int x, int y, int w, int h) {
         this.mode = mode;
@@ -254,11 +270,73 @@ public class TesseraPanel implements TesseraWidget {
         return this;
     }
 
+    /** Fluent alias — argument order (property, durationMs) matches CSS shorthand. */
+    public TesseraPanel transition(String property, int durationMs) {
+        this.transitionDurationMs = durationMs;
+        this.transitionProperty   = property;
+        return this;
+    }
+
+    /**
+     * Sets the hover text/foreground color that children with {@code color}
+     * transitions will animate toward.
+     */
+    public TesseraPanel hoverColor(int color) {
+        this.hoverTextColor    = color;
+        this.hoverTextColorSet = true;
+        return this;
+    }
+
+    /** Marks this panel as draggable (left-click starts a drag). */
+    public TesseraPanel draggable(boolean d) { this.draggable = d; return this; }
+
+    /** Sets the payload that will be carried during a drag from this panel. */
+    public TesseraPanel dragPayload(Object payload) { this.dragPayload = payload; return this; }
+
+    /**
+     * Registers a {@link TesseraDropZone} handler on this panel so it can receive
+     * drag-and-drop payloads.
+     */
+    public TesseraPanel dropZone(TesseraDropZone handler) { this.dropZoneHandler = handler; return this; }
+
+    /** Sets the right-click handler for this panel. */
+    public TesseraPanel onRightClick(Runnable r) { this.onRightClick = r; return this; }
+
     @Override
     public String getTooltip() { return tooltip; }
 
     @Override
     public void setTooltip(String text) { this.tooltip = text; }
+
+    /**
+     * Replaces this panel's normal-flow children with {@code newChildren} and triggers layout.
+     * Called either directly or via the pending-swap mechanism from a reactive model listener.
+     */
+    private void swapChildren(List<Entry> newChildren) {
+        children.clear();
+        children.addAll(newChildren);
+        layoutDirty = true;
+        layout();
+    }
+
+    /**
+     * Watches a {@link TesseraReactiveModel} and rebuilds this panel's children whenever the
+     * model changes.  {@code rebuild} should return a freshly configured panel whose children
+     * will replace the current ones (the panel itself is discarded — only its children are used).
+     *
+     * <p>The actual swap is deferred to the next {@link #render} call so it always happens on
+     * the render thread.</p>
+     *
+     * @param model   the reactive model to observe
+     * @param rebuild supplier that produces a new panel on each model change
+     */
+    public void watchModel(TesseraReactiveModel model, java.util.function.Supplier<TesseraPanel> rebuild) {
+        model.addChangeListener(() -> {
+            TesseraPanel fresh = rebuild.get();
+            List<Entry> newEntries = new ArrayList<>(fresh.children);
+            pendingChildren = newEntries;
+        });
+    }
 
     public TesseraPanel gridTemplateColumns(String[] tpl) { this.gridTemplateColumns = tpl; return this; }
 
@@ -600,6 +678,11 @@ public class TesseraPanel implements TesseraWidget {
     @Override
     public void render(GuiGraphics g, int mx, int my) {
         if (!visible) return;
+        // Apply deferred children swap from reactive model listener
+        if (pendingChildren != null) {
+            swapChildren(pendingChildren);
+            pendingChildren = null;
+        }
         if (layoutDirty) { layout(); }
         boolean hovered = bounds().contains(mx, my);
 
@@ -617,6 +700,8 @@ public class TesseraPanel implements TesseraWidget {
                 animToOpacity   = (hovered && hoverOpacity >= 0f) ? hoverOpacity : opacity;
                 animFromBorder  = computeCurrentBorder(now);
                 animToBorder    = (hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor;
+                animFromColor   = computeCurrentColor(now);
+                animToColor     = (hovered && hoverTextColorSet) ? hoverTextColor : 0;
                 animStartMs     = now;
                 wasHovered      = hovered;
             }
@@ -624,9 +709,15 @@ public class TesseraPanel implements TesseraWidget {
             boolean animBg     = "background".equals(transitionProperty) || "all".equals(transitionProperty);
             boolean animBorder = "border-color".equals(transitionProperty) || "all".equals(transitionProperty);
             boolean animOp     = "opacity".equals(transitionProperty) || "all".equals(transitionProperty);
+            boolean animColor  = "color".equals(transitionProperty) || "all".equals(transitionProperty);
             bg            = animBg     ? lerpColor(animFromBg,     animToBg,     t) : ((hovered && hoverBackgroundSet) ? hoverBackground : background);
             bColor        = animBorder ? lerpColor(animFromBorder, animToBorder, t) : ((hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor);
             effectiveOpacity = animOp  ? lerp(animFromOpacity, animToOpacity, t)    : ((hovered && hoverOpacity >= 0f) ? hoverOpacity : opacity);
+            // Propagate animated color to direct label/button children
+            if (animColor && hoverTextColorSet && animFromColor != 0) {
+                int animatedColor = lerpColor(animFromColor, animToColor, t);
+                propagateColorToChildren(animatedColor);
+            }
         } else {
             bg       = (hovered && hoverBackgroundSet) ? hoverBackground : background;
             bColor   = (hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor;
@@ -704,6 +795,11 @@ public class TesseraPanel implements TesseraWidget {
 
         // Render tooltip for any directly-hovered child that has one
         renderHoveredChildTooltip(g, mx, my);
+
+        // Render this panel's own tooltip when hovered (and no child tooltip was shown)
+        if (tooltip != null && !tooltip.isBlank() && hovered) {
+            renderTooltipBox(g, tooltip, mx, my);
+        }
     }
 
     // ── Transition animation helpers ──────────────────────────────────────────
@@ -725,6 +821,25 @@ public class TesseraPanel implements TesseraWidget {
         if (animStartMs == 0 || transitionDurationMs <= 0) return wasHovered ? ((hoverBorderColorSet) ? hoverBorderColor : borderColor) : borderColor;
         float t = Math.min(1f, (float)(now - animStartMs) / transitionDurationMs);
         return lerpColor(animFromBorder, animToBorder, t);
+    }
+
+    private int computeCurrentColor(long now) {
+        if (animStartMs == 0 || transitionDurationMs <= 0)
+            return wasHovered ? (hoverTextColorSet ? hoverTextColor : 0) : 0;
+        float t = Math.min(1f, (float)(now - animStartMs) / transitionDurationMs);
+        return lerpColor(animFromColor, animToColor, t);
+    }
+
+    /**
+     * Propagates a text color to direct {@link TesseraLabel} and {@link TesseraButton}
+     * children so the {@code color} transition affects inline text.
+     */
+    private void propagateColorToChildren(int color) {
+        for (Entry e : children) {
+            TesseraWidget w = e.widget();
+            if (w instanceof TesseraLabel lbl) lbl.color(color);
+            else if (w instanceof TesseraButton btn) btn.labelColor(color);
+        }
     }
 
     private static int lerpColor(int from, int to, float t) {
@@ -859,8 +974,21 @@ public class TesseraPanel implements TesseraWidget {
             return true;
         }
         // No child consumed the event — fire this panel's own click action if inside bounds.
-        if (btn == 0 && bounds().contains(mx, my) && onClickAction != null) {
-            onClickAction.run();
+        if (btn == 0 && bounds().contains(mx, my)) {
+            if (draggable) {
+                TesseraDragContext.startDrag(this, dragPayload, (int) mx, (int) my);
+                defocusAll();
+                return true;
+            }
+            if (onClickAction != null) {
+                onClickAction.run();
+                defocusAll();
+                return true;
+            }
+        }
+        // Right-click: fire onRightClick handler if inside bounds.
+        if (btn == 1 && bounds().contains(mx, my) && onRightClick != null) {
+            onRightClick.run();
             defocusAll();
             return true;
         }
@@ -908,6 +1036,13 @@ public class TesseraPanel implements TesseraWidget {
 
     @Override
     public void mouseReleased(double mx, double my, int btn) {
+        // If a drag is active and this panel has a drop zone, check for a drop
+        if (btn == 0 && TesseraDragContext.isDragging() && dropZoneHandler != null) {
+            if (dropZoneHandler.dropBounds().contains(mx, my)
+                    && dropZoneHandler.accepts(TesseraDragContext.payload())) {
+                TesseraDragContext.setDropTarget(dropZoneHandler);
+            }
+        }
         for (AbsEntry ae : absChildren) {
             if (ae.widget().isVisible()) ae.widget().mouseReleased(mx, my, btn);
         }
@@ -949,6 +1084,20 @@ public class TesseraPanel implements TesseraWidget {
 
     @Override
     public int getHeight() { return h; }
+
+    // ── Debug overlay support ─────────────────────────────────────────────────
+
+    /**
+     * Returns a flat list of all direct children (normal-flow + absolute) as
+     * {@link TesseraWidget} instances.  Used by {@link TesseraDebugOverlay} for
+     * recursive widget traversal; package-private on purpose.
+     */
+    java.util.List<TesseraWidget> debugChildren() {
+        java.util.List<TesseraWidget> result = new java.util.ArrayList<>(children.size() + absChildren.size());
+        for (Entry e : children) result.add(e.widget());
+        for (AbsEntry ae : absChildren) result.add(ae.widget());
+        return result;
+    }
 
     /**
      * Natural content height: sum of children heights (column) or max child height (row/grid)

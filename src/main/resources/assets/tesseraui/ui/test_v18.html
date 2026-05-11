@@ -1,0 +1,34 @@
+<col class="root">
+
+  <label class="title">TesseraUI v1.8 — Tooltips · Reactive · Toasts</label>
+
+  <!-- Tooltip demo section -->
+  <col class="section">
+    <label class="section-title">Tooltips</label>
+    <row class="btn-row">
+      <button class="btn-primary" onclick="noop" tooltip="Ceci est un tooltip statique">Hover me</button>
+      <button class="btn-secondary" onclick="noop" tooltip="{{ t:ui.count }}">Tooltip dynamique</button>
+    </row>
+  </col>
+
+  <!-- Reactive counter section -->
+  <col class="section">
+    <label class="section-title">Compteur réactif</label>
+    <row class="btn-row">
+      <button class="btn-dec" onclick="decrement">−</button>
+      <label class="counter-display">{{ count }}</label>
+      <button class="btn-inc" onclick="increment">+</button>
+    </row>
+  </col>
+
+  <!-- Toast demo section -->
+  <col class="section">
+    <label class="section-title">Toasts</label>
+    <row class="btn-row">
+      <button class="btn-success" onclick="toastSuccess">Success</button>
+      <button class="btn-error" onclick="toastError">Error</button>
+      <button class="btn-info" onclick="toastInfo">Info</button>
+    </row>
+  </col>
+
+</col>

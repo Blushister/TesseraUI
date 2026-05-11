@@ -33,6 +33,68 @@ public final class TesseraHtmlParser {
         return parse(new String(is.readAllBytes(), StandardCharsets.UTF_8));
     }
 
+    /**
+     * Parses an HTML fragment and returns the first element found.
+     * Used by {@link TesseraComponentRegistry#register(String, String)}.
+     */
+    public static TesseraNode parseFragment(String html) {
+        if (html == null || html.isBlank()) return null;
+        TesseraHtmlParser p = new TesseraHtmlParser(html.trim());
+        p.skipWhitespace();
+        if (p.peek("<")) return p.parseElement();
+        return null;
+    }
+
+    /**
+     * Parses an HTML document, registering top-level {@code <template name="…">} elements
+     * into the {@link TesseraComponentRegistry}, and returning the first non-template root.
+     */
+    public static TesseraNode parseWithComponents(String html) {
+        TesseraHtmlParser p = new TesseraHtmlParser(html.trim());
+        p.skipWhitespace();
+        while (p.pos < p.src.length() && p.peek("<")
+               && (p.peekAt(1) == '?' || p.peekAt(1) == '!')) {
+            if (p.peek("<!--")) {
+                p.pos += 4;
+                p.consumeUntil("-->");
+                if (p.src.startsWith("-->", p.pos)) p.pos += 3;
+            } else {
+                p.consumeUntil(">");
+                p.pos++;
+            }
+            p.skipWhitespace();
+        }
+        TesseraNode mainRoot = null;
+        while (p.pos < p.src.length()) {
+            p.skipWhitespace();
+            if (p.pos >= p.src.length()) break;
+            if (!p.peek("<") || p.peek("</")) break;
+            int savedPos = p.pos;
+            TesseraNode node = p.parseElement();
+            if (node == null) {
+                if (p.pos == savedPos) p.pos++;
+                continue;
+            }
+            if ("template".equals(node.tag())) {
+                String name = node.attr("name");
+                if (!name.isBlank() && !node.children().isEmpty()) {
+                    TesseraNode componentRoot = node.children().size() == 1
+                            ? node.children().get(0)
+                            : new TesseraNode("col", java.util.Map.of(), node.children(), "");
+                    TesseraComponentRegistry.register(name, componentRoot);
+                }
+            } else if (mainRoot == null) {
+                mainRoot = node;
+            }
+            p.skipWhitespace();
+        }
+        return mainRoot;
+    }
+
+    public static TesseraNode parseWithComponents(InputStream is) throws IOException {
+        return parseWithComponents(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+    }
+
     private TesseraNode parseDocument() {
         skipWhitespace();
         while (pos < src.length() && peek("<") && (peekAt(1) == '?' || peekAt(1) == '!')) {
@@ -115,7 +177,7 @@ public final class TesseraHtmlParser {
     }
 
     private TesseraNode makeNode(String tag, Map<String, String> attrs, List<TesseraNode> children, String text) {
-        if (!TesseraNode.KNOWN_TAGS.contains(tag)) {
+        if (!TesseraNode.KNOWN_TAGS.contains(tag) && !TesseraComponentRegistry.has(tag)) {
             LOGGER.warn("[TesseraUI] Unknown HTML tag ignored: <{}>", tag);
             return null;
         }

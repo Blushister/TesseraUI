@@ -1,0 +1,153 @@
+/* ── Root layout ── */
+.root {
+    flex-direction: column;
+    gap: 6;
+    padding: 6;
+    background: #17120D;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 6;
+    padding: 4;
+    background: #1F1812;
+    border: 1;
+    border-color: #A0642C;
+    border-radius: 3;
+}
+
+.title {
+    flex-grow: 1;
+    color: #F0B27A;
+    font-size: 7;
+    font-weight: 700;
+}
+
+.btn-debug {
+    background: #2A2019;
+    color: #F3E7D3;
+    font-size: 6;
+    padding: 2 6 2 6;
+    border: 1;
+    border-color: #5A3A1C;
+    border-radius: 2;
+    min-width: 60;
+}
+
+.btn-debug:hover {
+    background: #362A20;
+    border-color: #A0642C;
+}
+
+/* ── Cards row ── */
+.cards-row {
+    flex-direction: row;
+    gap: 6;
+}
+
+/* ── Card component ── */
+.card {
+    flex-grow: 1;
+    flex-direction: column;
+    background: #1F1812;
+    border: 1;
+    border-color: #5A3A1C;
+    border-radius: 4;
+    padding: 0;
+    gap: 0;
+}
+
+.card:hover {
+    border-color: #A0642C;
+    background: #2A2019;
+}
+
+.card-header {
+    flex-direction: row;
+    padding: 4 6 4 6;
+    background: #2A2019;
+    border-bottom-color: #5A3A1C;
+}
+
+.card-header h3 {
+    color: #F0B27A;
+    font-size: 7;
+    font-weight: 700;
+}
+
+.card-body {
+    flex-direction: column;
+    padding: 4 6 4 6;
+    gap: 2;
+}
+
+.card-body p {
+    color: #C2AD8E;
+    font-size: 6;
+}
+
+/* ── Nested demo ── */
+.nested-demo {
+    flex-direction: column;
+    gap: 4;
+    padding: 6;
+    background: #1F1812;
+    border: 1;
+    border-color: #362A20;
+    border-radius: 3;
+}
+
+.sec-title {
+    color: #F3E7D3;
+    font-size: 7;
+    font-weight: 700;
+}
+
+.nest-l0 {
+    flex-direction: column;
+    padding: 4;
+    gap: 3;
+    background: #2A2019;
+    border: 1;
+    border-color: #A0642C;
+    border-radius: 2;
+}
+
+.nest-l1 {
+    flex-direction: row;
+    gap: 4;
+    padding: 3;
+    background: #362A20;
+    border: 1;
+    border-color: #D89255;
+}
+
+.nest-l2 {
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 2;
+    padding: 3;
+    background: #17120D;
+    border: 1;
+    border-color: #5A3A1C;
+}
+
+.nest-l3 {
+    padding: 3;
+    background: #2A2019;
+    border: 1;
+    border-color: #7A6A55;
+}
+
+.nest-label {
+    color: #C2AD8E;
+    font-size: 6;
+}
+
+/* ── Hint ── */
+.hint {
+    color: #7A6A55;
+    font-size: 6;
+}

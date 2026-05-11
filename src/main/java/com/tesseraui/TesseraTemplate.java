@@ -62,14 +62,14 @@ public final class TesseraTemplate {
         return loadFromResourceManager(resourceId);
     }
 
-    // ── Filesystem loader (hot reload) ────────────────────────────────────────
+    // â”€â”€ Filesystem loader (hot reload) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static TesseraTemplate loadFromFilesystem(String resourceId) {
         Path htmlPath = TesseraHotReload.resolveHtml(resourceId);
         TesseraNode root;
         try {
             String html = Files.readString(htmlPath, StandardCharsets.UTF_8);
-            root = TesseraHtmlParser.parse(html);
+            root = TesseraHtmlParser.parseWithComponents(html);
         } catch (IOException e) {
             throw new RuntimeException(
                     "[TesseraUI] Hot reload: HTML not found on disk: " + htmlPath, e);
@@ -90,7 +90,7 @@ public final class TesseraTemplate {
         return new TesseraTemplate(root, sheet);
     }
 
-    // ── ResourceManager loader (production) ───────────────────────────────────
+    // â”€â”€ ResourceManager loader (production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static TesseraTemplate loadFromResourceManager(String resourceId) {
         String[] parts = resourceId.split(":", 2);
@@ -105,7 +105,7 @@ public final class TesseraTemplate {
             var htmlRes = rm.getResource(htmlLoc).orElseThrow(
                 () -> new IllegalArgumentException("Template not found: " + htmlLoc));
             try (var is = htmlRes.open()) {
-                root = TesseraHtmlParser.parse(is);
+                root = TesseraHtmlParser.parseWithComponents(is);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to load template: " + resourceId, e);
@@ -128,7 +128,7 @@ public final class TesseraTemplate {
                 }
             }
         } catch (IOException e) {
-            // CSS file absent — silent, this is expected
+            // CSS file absent â€” silent, this is expected
         }
 
         return new TesseraTemplate(root, sheet);
@@ -141,7 +141,7 @@ public final class TesseraTemplate {
 
     /** Creates a template from raw HTML and CSS strings. Does not require a Minecraft runtime. */
     public static TesseraTemplate fromString(String html, String css) {
-        TesseraNode root = TesseraHtmlParser.parse(html);
+        TesseraNode root = TesseraHtmlParser.parseWithComponents(html);
         TesseraStyleSheet sheet = css.isBlank() ? TesseraStyleSheet.EMPTY : TesseraCssParser.parse(css);
         return new TesseraTemplate(root, sheet);
     }
@@ -150,3 +150,4 @@ public final class TesseraTemplate {
 
     public TesseraStyleSheet styleSheet() { return styleSheet; }
 }
+

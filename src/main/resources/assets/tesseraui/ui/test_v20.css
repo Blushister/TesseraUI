@@ -1,0 +1,134 @@
+.root {
+  flex-direction: row;
+  gap: 6px;
+  padding: 6px;
+  background: #0f172a;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.header {
+  padding: 0 0 4px 0;
+}
+
+.title {
+  color: #B87333;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+/* ── Body layout ──────────────────────────────────────────── */
+.body {
+  gap: 6px;
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.section {
+  gap: 4px;
+  padding: 4px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 3px;
+}
+
+.list-section {
+  width: 140px;
+}
+
+.trans-section {
+  width: 160px;
+}
+
+.sec-title {
+  color: #94a3b8;
+  font-size: 6px;
+  font-weight: 700;
+}
+
+.sec-hint {
+  color: #64748b;
+  font-size: 5px;
+}
+
+/* ── Virtual list ─────────────────────────────────────────── */
+.vlist {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  height: 120px;
+}
+
+.item-label {
+  color: #e2e8f0;
+  font-size: 6px;
+  padding: 1px 4px;
+}
+
+/* ── Row-height slider ────────────────────────────────────── */
+.slider-row {
+  gap: 4px;
+  align-items: center;
+}
+
+.slider-lbl {
+  color: #94a3b8;
+  font-size: 5px;
+}
+
+.rh-slider {
+  width: 60px;
+  height: 8px;
+}
+
+.rh-val {
+  color: #B87333;
+  font-size: 5px;
+}
+
+/* ── Transition demo cards ────────────────────────────────── */
+.demo-card {
+  padding: 4px 8px;
+  border-radius: 2px;
+  border: 1px solid #334155;
+}
+
+.card-text {
+  color: #94a3b8;
+  font-size: 6px;
+}
+
+/* background transition */
+.bg-card {
+  background: #1e3a8a;
+  transition: background 300ms;
+}
+.bg-card:hover {
+  background: #3b82f6;
+}
+
+/* opacity transition */
+.op-card {
+  background: #14532d;
+  opacity: 1.0;
+  transition: opacity 200ms;
+}
+.op-card:hover {
+  opacity: 0.4;
+}
+
+/* border-color transition */
+.bc-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  transition: border-color 150ms;
+}
+.bc-card:hover {
+  border-color: #f97316;
+}
+
+/* color transition — text color on hover */
+.color-card {
+  background: #1e293b;
+  transition: color 250ms;
+}
+.color-card:hover {
+  color: #fbbf24;
+}

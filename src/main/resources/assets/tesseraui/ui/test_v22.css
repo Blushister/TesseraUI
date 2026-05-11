@@ -1,0 +1,55 @@
+.root-col {
+  gap: 4px;
+}
+
+.sec-title {
+  color: #B87333;
+  font-weight: 700;
+  font-size: 7px;
+}
+
+.item-row {
+  gap: 3px;
+  padding: 2px 0px;
+}
+
+.dnd-row {
+  gap: 6px;
+  padding: 2px 0px;
+}
+
+.drag-red {
+  background: #7f1d1d;
+  border: 1px solid #ef4444;
+  padding: 5px 10px;
+  color: #fecaca;
+  font-size: 7px;
+}
+
+.drag-red:hover {
+  background: #991b1b;
+}
+
+.drag-blue {
+  background: #1e3a5f;
+  border: 1px solid #3b82f6;
+  padding: 5px 10px;
+  color: #bfdbfe;
+  font-size: 7px;
+}
+
+.drag-blue:hover {
+  background: #1d4ed8;
+}
+
+.drag-green {
+  background: #14532d;
+  border: 1px solid #22c55e;
+  padding: 5px 10px;
+  color: #bbf7d0;
+  font-size: 7px;
+}
+
+.drag-green:hover {
+  background: #15803d;
+}

@@ -118,6 +118,41 @@ public final class TesseraDevCommand {
                         return 1;
                     })
                 )
+                .then(Commands.literal("test-v18")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV18()));
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("test-v19")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV19()));
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("test-v20")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV20()));
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("test-v21")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV21()));
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("test-v22")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV22()));
+                        return 1;
+                    })
+                )
         );
     }
 }

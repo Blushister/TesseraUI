@@ -31,7 +31,9 @@ public final class TesseraNode {
         // Table tags
         "table", "thead", "tbody", "tfoot", "tr", "th", "td",
         // Media
-        "img"
+        "img",
+        // Component system
+        "slot", "template"
     );
 
     private final String tag;

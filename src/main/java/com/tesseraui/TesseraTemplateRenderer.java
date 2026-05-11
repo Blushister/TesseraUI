@@ -154,6 +154,7 @@ public final class TesseraTemplateRenderer {
         if (hoverStyle.borderLeftColor   != TesseraStyle.UNSET) panel.hoverBorderSide("left",   hoverStyle.borderLeftColor);
         if (hoverStyle.borderRightColor  != TesseraStyle.UNSET) panel.hoverBorderSide("right",  hoverStyle.borderRightColor);
         if (hoverStyle.opacity != TesseraStyle.UNSET_F) panel.hoverOpacity(hoverStyle.opacity);
+        if (hoverStyle.color != TesseraStyle.UNSET) panel.hoverColor(hoverStyle.color);
 
         // Apply CSS transition to the panel
         if (style.transitionDurationMs > 0)
@@ -171,6 +172,21 @@ public final class TesseraTemplateRenderer {
         String onClickHandler = node.onClickHandler();
         if (!onClickHandler.isEmpty() && handlers.containsKey(onClickHandler))
             panel.onClick(handlers.get(onClickHandler));
+
+        // oncontextmenu attribute → wire right-click handler
+        String onCtxHandler = node.attr("oncontextmenu");
+        if (!onCtxHandler.isEmpty() && handlers.containsKey(onCtxHandler))
+            panel.onRightClick(handlers.get(onCtxHandler));
+
+        // Drag & Drop attributes
+        String draggableAttr = node.attr("draggable");
+        if ("true".equalsIgnoreCase(draggableAttr)) {
+            panel.draggable(true);
+            String payloadAttr = node.attr("drag-payload");
+            if (!payloadAttr.isBlank()) {
+                panel.dragPayload(TesseraBindingResolver.resolve(payloadAttr, model));
+            }
+        }
 
         int innerW = w - padL - padR;
         int innerH = h - padT - padB;
@@ -577,6 +593,9 @@ public final class TesseraTemplateRenderer {
                 TesseraStyle focusStyle = sheet.resolveFocus(node, ancestors);
                 if (focusStyle.borderColor != TesseraStyle.UNSET)
                     input.focusBorderColor(focusStyle.borderColor);
+                // Focus management: register unless tabindex="-1"
+                String tabIndexAttr = node.attr("tabindex");
+                if (!"-1".equals(tabIndexAttr)) TesseraFocusManager.register(input);
                 yield input;
             }
 
@@ -621,6 +640,9 @@ public final class TesseraTemplateRenderer {
                     ta.onChange(inputHandlers.get(taOnInput));
                 TesseraStyle taFocusStyle = sheet.resolveFocus(node, ancestors);
                 if (taFocusStyle.borderColor != TesseraStyle.UNSET) ta.focusBorderColor(taFocusStyle.borderColor);
+                // Focus management: register unless tabindex="-1"
+                String taTabIndex = node.attr("tabindex");
+                if (!"-1".equals(taTabIndex)) TesseraFocusManager.register(ta);
                 yield ta;
             }
 
@@ -907,7 +929,124 @@ public final class TesseraTemplateRenderer {
                 yield dd;
             }
 
-            default -> null;
+            // ── Tabs container ────────────────────────────────────────────────
+            case "tabs" -> {
+                int tpW = wVal > 0 ? wVal : (inheritWidth && availW > 0 ? availW : 160);
+                int tpH = hVal > 0 ? hVal : 100;
+                var tabPanel = new TesseraTabPanel(0, 0, tpW, tpH);
+                for (TesseraNode child : node.children()) {
+                    if (!"tab".equals(child.tag())) continue;
+                    String tabLabel = child.attr("label");
+                    if (tabLabel.isBlank()) {
+                        String i18nKey = child.attr("data-i18n");
+                        if (!i18nKey.isBlank()) tabLabel = TesseraI18n.translate(i18nKey);
+                    }
+                    if (tabLabel.isBlank()) tabLabel = "Tab";
+                    int tabBarH = 14;
+                    int contentH = tpH - tabBarH;
+                    ancestors.push(node);
+                    TesseraPanel tabContent;
+                    try {
+                        tabContent = buildNode(child, sheet, model, handlers, inputHandlers, inputStates,
+                                ancestors, 0, 0, tpW, contentH, depth + 1, inherited);
+                    } finally {
+                        ancestors.pop();
+                    }
+                    tabPanel.addTab(tabLabel, tabContent);
+                }
+                yield tabPanel;
+            }
+
+            // ── Virtual list ──────────────────────────────────────────────────
+            case "virtual-list" -> {
+                int vlW = wVal > 0 ? wVal : (inheritWidth && availW > 0 ? availW : 100);
+                int vlH = hVal > 0 ? hVal : 80;
+                int vlRowH = parseIntAttr(node.attr("row-height"), 16);
+                String vFor = node.vFor();
+                java.util.List<TesseraModel> vlItems = new java.util.ArrayList<>();
+                String varName = "item";
+                if (!vFor.isEmpty() && vFor.contains(" in ")) {
+                    String[] parts = vFor.split(" in ", 2);
+                    varName = parts[0].trim();
+                    String listKey = parts[1].trim();
+                    String resolved = model.resolve(listKey);
+                    int count = parseIntAttr(resolved, 0);
+                    for (int i = 0; i < count; i++) {
+                        final int idx = i;
+                        final String vn = varName;
+                        vlItems.add(k -> model.resolve(vn + "." + k + "." + idx));
+                    }
+                }
+                final java.util.List<TesseraNode> rowTemplate = new java.util.ArrayList<>(node.children());
+                final String finalVarName = varName;
+                final int finalVlW = vlW;
+                final int finalVlRowH = vlRowH;
+                final TesseraStyleSheet finalSheet = sheet;
+                final Map<String, Runnable> finalHandlers = handlers;
+                final Map<String, Consumer<String>> finalInputHandlers = inputHandlers;
+                final Map<String, TesseraInputState> finalInputStates = inputStates;
+                final TesseraStyle finalInherited = inherited.merge(style);
+                java.util.function.Function<TesseraModel, TesseraWidget> factory = rowModel -> {
+                    TesseraPanel rowPanel = TesseraPanel.row(0, 0, finalVlW, finalVlRowH).gap(2);
+                    java.util.Deque<TesseraNode> rowAncestors = new java.util.ArrayDeque<>();
+                    for (TesseraNode child : rowTemplate) {
+                        TesseraNode resolved2 = TesseraForEach.resolveAttrs(child, rowModel);
+                        TesseraWidget w = buildWidget(resolved2, finalSheet, rowModel,
+                                finalHandlers, finalInputHandlers, finalInputStates,
+                                rowAncestors, finalVlW, finalVlRowH, true, false, depth + 1, finalInherited);
+                        if (w != null) rowPanel.add(w);
+                    }
+                    rowPanel.layout();
+                    return rowPanel;
+                };
+                TesseraVirtualList vl = TesseraVirtualList.of(vlItems, vlRowH, factory);
+                vl.setSize(vlW, vlH);
+                if (style.background != TesseraStyle.UNSET) vl.background(style.background);
+                yield vl;
+            }
+
+            // ── Item slot ─────────────────────────────────────────────────────
+            case "item-slot" -> {
+                int ssz = parseIntAttr(node.attr("size"), 18);
+                if (wVal > 0) ssz = wVal;
+                var slot = new TesseraItemSlot(0, 0, ssz);
+                String itemId = TesseraBindingResolver.resolve(node.attr("item"), model);
+                if (itemId != null && !itemId.isBlank()) {
+                    try {
+                        net.minecraft.resources.ResourceLocation rl =
+                                net.minecraft.resources.ResourceLocation.parse(itemId);
+                        net.minecraft.world.item.Item item =
+                                net.minecraft.core.registries.BuiltInRegistries.ITEM.get(rl);
+                        slot.item(new net.minecraft.world.item.ItemStack(item));
+                    } catch (Exception ignored) {}
+                }
+                String showCntRaw = node.attr("show-count");
+                if (!showCntRaw.isBlank()) slot.showCount(!"false".equalsIgnoreCase(showCntRaw));
+                String handler = node.onClickHandler();
+                if (!handler.isEmpty() && handlers.containsKey(handler))
+                    slot.onClick(handlers.get(handler));
+                yield slot;
+            }
+
+            // ── Component registry: custom tags ───────────────────────────────
+            default -> {
+                if (TesseraComponentRegistry.has(node.tag())) {
+                    TesseraNode templateRoot = TesseraComponentRegistry.get(node.tag());
+                    TesseraNode instantiated = TesseraComponentRegistry.instantiate(
+                            templateRoot, node.children());
+                    if (instantiated == null) yield null;
+                    int compW = wVal > 0 ? wVal : (inheritWidth && availW > 0 ? availW : availW);
+                    int compH = hVal > 0 ? hVal : availH;
+                    TesseraPanel built = buildNode(instantiated, sheet, model, handlers,
+                            inputHandlers, inputStates, ancestors, 0, 0, compW, compH, depth, inherited);
+                    if (hRaw == TesseraStyle.UNSET && !inheritHeight) {
+                        int natH = built.fitContentHeight();
+                        if (natH > built.getHeight()) { built.setSize(built.getWidth(), natH); built.layout(); }
+                    }
+                    yield built;
+                }
+                yield null;
+            }
         };
 
         // v-show=false: widget built and in layout (space preserved), but marked invisible
@@ -919,6 +1058,17 @@ public final class TesseraTemplateRenderer {
             String tipAttr = node.attr("tooltip");
             if (!tipAttr.isBlank()) {
                 widget.setTooltip(TesseraBindingResolver.resolve(tipAttr, model));
+            }
+        }
+        // draggable attr on any widget that is a TesseraPanel
+        if (widget instanceof TesseraPanel panelWidget) {
+            String dAttr = node.attr("draggable");
+            if ("true".equalsIgnoreCase(dAttr)) {
+                panelWidget.draggable(true);
+                String payloadAttr = node.attr("drag-payload");
+                if (!payloadAttr.isBlank()) {
+                    panelWidget.dragPayload(TesseraBindingResolver.resolve(payloadAttr, model));
+                }
             }
         }
         return widget;

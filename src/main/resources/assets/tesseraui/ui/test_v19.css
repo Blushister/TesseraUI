@@ -1,0 +1,88 @@
+/* ── Root ──────────────────────────────────────────────────────────────── */
+.v19-root {
+  flex-grow: 1;
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────────────── */
+.main-tabs {
+  flex-grow: 1;
+}
+
+/* ── Tab content area ─────────────────────────────────────────────────── */
+.tab-content {
+  padding: 8px;
+  gap: 6px;
+}
+
+/* ── Section headings ─────────────────────────────────────────────────── */
+.sec {
+  color: #B87333;
+  font-weight: 700;
+  font-size: 7px;
+}
+
+/* ── Form groups ──────────────────────────────────────────────────────── */
+.form-group {
+  gap: 2px;
+}
+
+.field-label {
+  color: #C2AD8E;
+  font-size: 6px;
+}
+
+.field-input {
+  background: #1F1812;
+  border: 1px solid #A0642C;
+  color: #F3E7D3;
+  font-size: 7px;
+  padding: 3px 5px;
+  height: 13px;
+}
+
+.field-input:focus {
+  border-color: #F0B27A;
+}
+
+.field-textarea {
+  background: #1F1812;
+  border: 1px solid #A0642C;
+  color: #F3E7D3;
+  font-size: 7px;
+  padding: 3px 5px;
+}
+
+.field-textarea:focus {
+  border-color: #F0B27A;
+}
+
+/* ── Button row ───────────────────────────────────────────────────────── */
+.btn-row {
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.btn-primary {
+  background: #A0642C;
+  color: #F3E7D3;
+  font-size: 7px;
+  padding: 3px 10px;
+}
+
+/* ── Sliders ──────────────────────────────────────────────────────────── */
+.slider {
+  height: 10px;
+}
+
+/* ── About tab ────────────────────────────────────────────────────────── */
+.about-text {
+  color: #C2AD8E;
+  font-size: 7px;
+  white-space: normal;
+}
+
+.about-item {
+  color: #C2AD8E;
+  font-size: 6px;
+}

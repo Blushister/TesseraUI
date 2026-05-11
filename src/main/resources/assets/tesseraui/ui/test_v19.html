@@ -1,0 +1,66 @@
+<col class="v19-root">
+
+  <tabs class="main-tabs">
+
+    <tab label="Général">
+      <col class="tab-content">
+        <p class="sec">Formulaire — navigation Tab entre les champs</p>
+
+        <col class="form-group">
+          <label class="field-label">Nom</label>
+          <input id="inp-name" placeholder="Votre nom…" class="field-input" />
+        </col>
+
+        <col class="form-group">
+          <label class="field-label">Email</label>
+          <input id="inp-email" placeholder="exemple@mail.com" class="field-input" />
+        </col>
+
+        <col class="form-group">
+          <label class="field-label">Message</label>
+          <textarea id="inp-msg" placeholder="Votre message…" rows="3" class="field-textarea" />
+        </col>
+
+        <row class="btn-row">
+          <button class="btn-primary" onclick="openModal">Ouvrir modal</button>
+        </row>
+      </col>
+    </tab>
+
+    <tab label="Avancé">
+      <col class="tab-content">
+        <p class="sec">Sliders de configuration</p>
+
+        <col class="form-group">
+          <label class="field-label">Volume</label>
+          <slider min="0" max="100" value="75" class="slider" />
+        </col>
+
+        <col class="form-group">
+          <label class="field-label">Luminosité</label>
+          <slider min="0" max="100" value="50" class="slider" />
+        </col>
+
+        <col class="form-group">
+          <label class="field-label">Vitesse</label>
+          <slider min="1" max="10" value="5" class="slider" />
+        </col>
+      </col>
+    </tab>
+
+    <tab label="À propos">
+      <col class="tab-content">
+        <p class="sec">TesseraUI v1.9</p>
+        <p class="about-text">Bibliothèque de rendu HTML+CSS pour Minecraft NeoForge 1.21.1.</p>
+        <p class="about-text">Fonctionnalités démontrées ici :</p>
+        <ul>
+          <li class="about-item">TesseraTabPanel — onglets avec contenu dynamique</li>
+          <li class="about-item">TesseraModal — overlay confirm/annuler</li>
+          <li class="about-item">TesseraFocusManager — navigation clavier Tab</li>
+        </ul>
+      </col>
+    </tab>
+
+  </tabs>
+
+</col>
