@@ -113,16 +113,19 @@ public abstract class TesseraScreen extends Screen {
     }
 
     /**
-     * Ends any active drag-and-drop operation when the mouse button is released.
+     * Ends any active drag-and-drop operation when the mouse button is released,
+     * and always forwards the event to the panel tree so widgets such as
+     * {@link TesseraSlider} can reset their internal drag state.
      */
     @Override
     public boolean mouseReleased(double mx, double my, int btn) {
+        TesseraPanel root = tesseraRoot();
         if (btn == 0 && TesseraDragContext.isDragging()) {
-            TesseraPanel root = tesseraRoot();
             if (root != null) root.mouseReleased(mx, my, btn);
             TesseraDragContext.endDrag((int) mx, (int) my);
             return true;
         }
+        if (root != null) root.mouseReleased(mx, my, btn);
         return super.mouseReleased(mx, my, btn);
     }
 
@@ -179,6 +182,7 @@ public abstract class TesseraScreen extends Screen {
     protected final void renderTesseraOverlays(GuiGraphics g, int mx, int my) {
         TesseraDebugOverlay.render(g, tesseraRoot(), mx, my);
         TesseraContextMenu.render(g, mx, my);
+        TesseraInventoryPicker.render(g, mx, my);
     }
 
     // ── Hot reload ────────────────────────────────────────────────────────────
