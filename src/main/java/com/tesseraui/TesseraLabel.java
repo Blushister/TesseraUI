@@ -32,6 +32,7 @@ public class TesseraLabel extends TesseraElement {
 
     public TesseraLabel text(String text) { this.text = text; return this; }
     public TesseraLabel color(int color)  { this.color = color; return this; }
+    public int getColor()                 { return color; }
     public TesseraLabel textAlign(String align) { this.textAlign = align; return this; }
     public TesseraLabel font(String fontFamily) { this.fontFamily = fontFamily; return this; }
     public TesseraLabel fontSize(float px) { if (px > 0) this.fontSize = px; return this; }

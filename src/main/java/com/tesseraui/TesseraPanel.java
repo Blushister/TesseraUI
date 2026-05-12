@@ -98,6 +98,8 @@ public class TesseraPanel implements TesseraWidget {
     private float   animFromOpacity      = 1f, animToOpacity = 1f;
     private int     animFromBorder       = 0, animToBorder   = 0;
     private int     animFromColor        = 0, animToColor    = 0;
+    /** Original color of direct label/button children — captured on first hover-in, used to restore on hover-out. */
+    private int     baseChildrenColor    = 0;
 
     // ── Drag & Drop ────────────────────────────────────────────────────────────
     private boolean         draggable        = false;
@@ -700,8 +702,28 @@ public class TesseraPanel implements TesseraWidget {
                 animToOpacity   = (hovered && hoverOpacity >= 0f) ? hoverOpacity : opacity;
                 animFromBorder  = computeCurrentBorder(now);
                 animToBorder    = (hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor;
-                animFromColor   = computeCurrentColor(now);
-                animToColor     = (hovered && hoverTextColorSet) ? hoverTextColor : 0;
+                if (hoverTextColorSet) {
+                    if (hovered) {
+                        // Capture the original child text color the first time hover starts
+                        if (baseChildrenColor == 0) {
+                            for (Entry e : children) {
+                                if (e.widget() instanceof TesseraLabel lbl) {
+                                    int c = lbl.getColor();
+                                    if (c != 0) { baseChildrenColor = c; break; }
+                                }
+                            }
+                            if (baseChildrenColor == 0) baseChildrenColor = TesseraPalette.CREAM;
+                        }
+                        animFromColor = baseChildrenColor;
+                        animToColor   = hoverTextColor;
+                    } else {
+                        animFromColor = computeCurrentColor(now);
+                        animToColor   = baseChildrenColor != 0 ? baseChildrenColor : TesseraPalette.CREAM;
+                    }
+                } else {
+                    animFromColor = computeCurrentColor(now);
+                    animToColor   = 0;
+                }
                 animStartMs     = now;
                 wasHovered      = hovered;
             }
@@ -714,7 +736,7 @@ public class TesseraPanel implements TesseraWidget {
             bColor        = animBorder ? lerpColor(animFromBorder, animToBorder, t) : ((hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor);
             effectiveOpacity = animOp  ? lerp(animFromOpacity, animToOpacity, t)    : ((hovered && hoverOpacity >= 0f) ? hoverOpacity : opacity);
             // Propagate animated color to direct label/button children
-            if (animColor && hoverTextColorSet && animFromColor != 0) {
+            if (animColor && hoverTextColorSet && (animFromColor != 0 || animToColor != 0)) {
                 int animatedColor = lerpColor(animFromColor, animToColor, t);
                 propagateColorToChildren(animatedColor);
             }
@@ -949,6 +971,12 @@ public class TesseraPanel implements TesseraWidget {
 
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
+        // Inventory picker has the highest priority — intercept before any widget.
+        if (TesseraInventoryPicker.isOpen()) {
+            boolean consumed = TesseraInventoryPicker.mouseClicked(mx, my, btn);
+            if (consumed) return true;
+            // Picker closed (click was outside it) — fall through so the widget below also reacts.
+        }
         // Absolute children are visually on top — check them first (reverse paint order)
         for (int i = absChildren.size() - 1; i >= 0; i--) {
             AbsEntry ae = absChildren.get(i);
