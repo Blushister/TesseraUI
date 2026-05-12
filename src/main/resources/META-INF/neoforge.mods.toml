@@ -9,6 +9,7 @@ license="${mod_license}"
     description='''${mod_description}'''
     authors="${mod_authors}"
     displayURL="https://github.com/Blushister/TesseraUI"
+    logoFile="icon.png"
 
 [[dependencies.tesseraui]]
     modId="neoforge"
