@@ -15,34 +15,36 @@ Everything that's painful to build in NeoForge GUI (flexbox layout, hover transi
 
 ## Installation
 
-### Via GitHub Packages
+### 1. Download the jar
 
-`build.gradle`:
+Grab the latest `tesseraui-x.x.x.jar` from the [Releases](https://github.com/Blushister/TesseraUI/releases) page or from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/tesseraui).
+
+### 2. Add it to your mod
+
+Drop the jar in your `libs/` folder, then in `build.gradle`:
+
 ```groovy
-repositories {
-    maven {
-        url 'https://maven.pkg.github.com/Blushister/TesseraUI'
-        credentials {
-            username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
-            password = project.findProperty('gpr.key')  ?: System.getenv('GITHUB_TOKEN')
-        }
-    }
-}
-
 dependencies {
-    implementation "com.tesseraui:tesseraui:1.0.0"
+    implementation files('libs/tesseraui-1.0.0.jar')
 }
 ```
 
-Add your GitHub token to `~/.gradle/gradle.properties`:
-```properties
-gpr.user=YOUR_GITHUB_USERNAME
-gpr.key=YOUR_GITHUB_TOKEN
+### 3. Declare the dependency
+
+`src/main/resources/META-INF/neoforge.mods.toml`:
+
+```toml
+[[dependencies.yourmod]]
+    modId        = "tesseraui"
+    type         = "required"
+    versionRange = "[1.0,)"
+    ordering     = "NONE"
+    side         = "CLIENT"
 ```
 
-> A read-only token with `read:packages` scope is enough. Generate one at [github.com/settings/tokens](https://github.com/settings/tokens).
+### Via CurseForge Maven
 
-### Via CurseForge Maven *(coming soon)*
+If you prefer Gradle dependency management:
 
 ```groovy
 repositories {
@@ -53,16 +55,7 @@ dependencies {
 }
 ```
 
-### `neoforge.mods.toml`
-
-```toml
-[[dependencies.yourmod]]
-    modId        = "tesseraui"
-    type         = "required"
-    versionRange = "[1.0,)"
-    ordering     = "NONE"
-    side         = "CLIENT"
-```
+Replace `<file-id>` with the file ID from the CurseForge project page.
 
 ---
 
