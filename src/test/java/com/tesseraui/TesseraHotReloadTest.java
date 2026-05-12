@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,6 +43,7 @@ class TesseraHotReloadTest {
 
     @AfterEach
     void tearDown() throws Exception {
+        TesseraHotReload.invalidateAll();
         RESOURCES_ROOT_FIELD.set(null, previousRoot);
     }
 
@@ -64,5 +67,38 @@ class TesseraHotReloadTest {
     void resolveCss_validId_endsWithCss() {
         Path result = TesseraHotReload.resolveCss("mymod:ui/menu");
         assertTrue(result.toString().endsWith(".css"));
+    }
+
+    @Test
+    void load_linkStylesheetFromHtml_appliesBeforeCompanionCss() throws Exception {
+        Path ui = tempRoot.resolve("assets").resolve("mymod").resolve("ui");
+        Files.writeString(ui.resolve("shared.css"), ".box { color: #112233; background: #010203; }");
+        Files.writeString(ui.resolve("menu.css"), ".box { color: #445566; }");
+        Files.writeString(ui.resolve("menu.html"),
+                "<col><link rel=\"stylesheet\" href=\"mymod:ui/shared.css\"/><label class=\"box\">Hi</label></col>");
+
+        TesseraTemplate template = TesseraTemplate.load("mymod:ui/menu");
+        TesseraNode label = template.root().children().stream()
+                .filter(n -> "label".equals(n.tag()))
+                .findFirst()
+                .orElseThrow();
+        TesseraStyle style = template.styleSheet().resolve(label, new ArrayDeque<>());
+
+        assertEquals(0xFF445566, style.color, "companion CSS should override linked CSS");
+        assertEquals(0xFF010203, style.background, "linked CSS should provide shared properties");
+    }
+
+    @Test
+    void load_relativeLinkStylesheet_resolvesBesideTemplate() throws Exception {
+        Path ui = tempRoot.resolve("assets").resolve("mymod").resolve("ui");
+        Files.writeString(ui.resolve("shared.css"), ".box { color: #112233; }");
+        Files.writeString(ui.resolve("menu.html"),
+                "<col><link rel=\"stylesheet\" href=\"shared.css\"/><label class=\"box\">Hi</label></col>");
+
+        TesseraTemplate template = TesseraTemplate.load("mymod:ui/menu");
+        TesseraNode label = new TesseraNode("label", Map.of("class", "box"), java.util.List.of(), "");
+        TesseraStyle style = template.styleSheet().resolve(label, new ArrayDeque<>());
+
+        assertEquals(0xFF112233, style.color);
     }
 }

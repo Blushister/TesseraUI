@@ -149,6 +149,11 @@ public final class TesseraHotReload {
         return resolveExt(resourceId, ".css");
     }
 
+    /** Resolves an explicitly linked stylesheet resource. */
+    public static Path resolveStylesheet(String resourceId) {
+        return resolveExt(resourceId, resourceId.endsWith(".css") ? "" : ".css");
+    }
+
     private static Path resolveExt(String resourceId, String ext) {
         String[] parts = resourceId.split(":", 2);
         String namespace = parts[0];

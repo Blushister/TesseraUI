@@ -199,6 +199,16 @@ class TesseraHtmlParserTest {
         assertEquals("minecraft:textures/item/diamond.png", root.attr("src"));
     }
 
+    @Test
+    void parse_linkStylesheetTag() {
+        TesseraNode root = TesseraHtmlParser.parse(
+                "<link rel=\"stylesheet\" href=\"mymod:ui/shared.css\"/>");
+        assertNotNull(root);
+        assertEquals("link", root.tag());
+        assertEquals("stylesheet", root.attr("rel"));
+        assertEquals("mymod:ui/shared.css", root.attr("href"));
+    }
+
     // ── hr (void element) ─────────────────────────────────────────────────────
 
     @Test
@@ -212,7 +222,7 @@ class TesseraHtmlParserTest {
 
     @Test
     void node_isKnown_knownTags() {
-        for (String tag : new String[]{"div", "p", "table", "tr", "td", "th", "img", "hr", "span"}) {
+        for (String tag : new String[]{"div", "p", "table", "tr", "td", "th", "img", "hr", "span", "link"}) {
             TesseraNode n = new TesseraNode(tag, java.util.Map.of(), java.util.List.of(), "");
             assertTrue(n.isKnown(), "Expected " + tag + " to be a known tag");
         }

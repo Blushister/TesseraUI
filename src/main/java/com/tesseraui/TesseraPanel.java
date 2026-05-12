@@ -1240,6 +1240,26 @@ public class TesseraPanel implements TesseraWidget {
         return false;
     }
 
+    /**
+     * Propagates a mouse scroll event to children that support it.
+     * Recurses into nested {@link TesseraPanel}s so that a scroll over a
+     * {@link TesseraVirtualList} buried in the hierarchy is forwarded correctly.
+     *
+     * @return {@code true} if any child consumed the event
+     */
+    @Override
+    public boolean mouseScrolled(double mx, double my, double dy) {
+        for (AbsEntry ae : absChildren) {
+            if (!ae.widget().isVisible()) continue;
+            if (ae.widget().mouseScrolled(mx, my, dy)) return true;
+        }
+        for (Entry e : children) {
+            if (!e.widget().isVisible()) continue;
+            if (e.widget().mouseScrolled(mx, my, dy)) return true;
+        }
+        return false;
+    }
+
     @Override
     public void setFocused(boolean focused) {
         if (!focused) defocusAll();

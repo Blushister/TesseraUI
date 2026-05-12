@@ -134,7 +134,53 @@ public final class TesseraStyleSheet {
 
     public boolean isEmpty() {
         return base.isEmpty() && hover.isEmpty() && active.isEmpty()
-            && disabled.isEmpty() && focus.isEmpty() && mediaBlocks.isEmpty();
+            && disabled.isEmpty() && focus.isEmpty() && mediaBlocks.isEmpty()
+            && keyframeRegistry.isEmpty();
+    }
+
+    /**
+     * Returns a stylesheet where {@code other} is appended after this sheet in
+     * cascade order. Rules from {@code other} win over equally-specific rules in
+     * this sheet, matching how later CSS files override earlier files.
+     */
+    public TesseraStyleSheet merge(TesseraStyleSheet other) {
+        if (other == null || other.isEmpty()) return this;
+        if (isEmpty()) return other;
+
+        int nextOrder = maxRuleOrder() + 1;
+        List<Rule> newBase     = appendWithOrderOffset(base,     other.base,     nextOrder);
+        nextOrder += other.base.size();
+        List<Rule> newHover    = appendWithOrderOffset(hover,    other.hover,    nextOrder);
+        nextOrder += other.hover.size();
+        List<Rule> newActive   = appendWithOrderOffset(active,   other.active,   nextOrder);
+        nextOrder += other.active.size();
+        List<Rule> newDisabled = appendWithOrderOffset(disabled, other.disabled, nextOrder);
+        nextOrder += other.disabled.size();
+        List<Rule> newFocus    = appendWithOrderOffset(focus,    other.focus,    nextOrder);
+
+        List<MediaBlock> newMedia = new ArrayList<>(mediaBlocks);
+        newMedia.addAll(other.mediaBlocks);
+
+        TesseraStyleSheet result = new TesseraStyleSheet(newBase, newHover, newActive, newDisabled, newFocus, newMedia);
+        result.keyframeRegistry = new HashMap<>(keyframeRegistry);
+        result.keyframeRegistry.putAll(other.keyframeRegistry);
+        return result;
+    }
+
+    private int maxRuleOrder() {
+        int max = 0;
+        for (List<Rule> list : List.of(base, hover, active, disabled, focus)) {
+            for (Rule r : list) if (r.order() > max) max = r.order();
+        }
+        return max;
+    }
+
+    private static List<Rule> appendWithOrderOffset(List<Rule> first, List<Rule> second, int nextOrder) {
+        List<Rule> out = new ArrayList<>(first.size() + second.size());
+        out.addAll(first);
+        int order = nextOrder;
+        for (Rule r : second) out.add(new Rule(r.selector(), r.style(), order++));
+        return out;
     }
 
     /**

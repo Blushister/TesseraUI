@@ -20,7 +20,7 @@ public final class TesseraNode {
     public static final Set<String> KNOWN_TAGS = Set.of(
         // Core TesseraUI tags
         "div", "label", "button", "icon", "badge", "grid", "row", "col",
-        "hr", "span", "input", "textarea", "checkbox", "slider", "select", "option",
+        "hr", "span", "input", "textarea", "checkbox", "slider", "select", "option", "link",
         // Semantic block tags
         "p", "h1", "h2", "h3", "h4", "h5", "h6",
         "ul", "ol", "li",

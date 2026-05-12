@@ -47,6 +47,14 @@ public interface TesseraWidget {
     /** Returns the current pixel height. Used by {@link TesseraPanel} during layout. */
     int getHeight();
 
+    /**
+     * Handles a mouse scroll event. The coordinates are in screen space; {@code dy} is
+     * the vertical scroll delta (positive = scroll up in most systems).
+     *
+     * @return {@code true} if this widget consumed the event
+     */
+    default boolean mouseScrolled(double mx, double my, double dy) { return false; }
+
     /** Handles a key press while focused. Returns {@code true} if consumed. */
     default boolean keyPressed(int keyCode, int scanCode, int modifiers) { return false; }
 

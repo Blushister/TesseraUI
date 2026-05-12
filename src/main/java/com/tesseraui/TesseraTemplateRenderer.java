@@ -36,7 +36,18 @@ public final class TesseraTemplateRenderer {
                                   Map<String, Runnable> handlers,
                                   Map<String, Consumer<String>> inputHandlers,
                                   int x, int y, int w, int h) {
-        return build(template, model, handlers, inputHandlers, null, x, y, w, h);
+        return build(template, model, handlers, inputHandlers,
+                (Map<String, TesseraInputState>) null, x, y, w, h);
+    }
+
+    public static TesseraPanel build(TesseraTemplate template, TesseraModel model,
+                                  Map<String, Runnable> handlers,
+                                  Map<String, Consumer<String>> inputHandlers,
+                                  TesseraRenderContext context,
+                                  int x, int y, int w, int h) {
+        return build(template, model, handlers, inputHandlers,
+                context != null ? context.inputStates() : null,
+                x, y, w, h);
     }
 
     public static TesseraPanel build(TesseraTemplate template, TesseraModel model,
@@ -262,13 +273,19 @@ public final class TesseraTemplateRenderer {
                 }
 
                 boolean isTdTh = "td".equals(childTag) || "th".equals(childTag);
+                boolean isVirtualList = "virtual-list".equals(childTag)
+                        && childStyle.height == TesseraStyle.UNSET
+                        && childStyle.heightCalc == null
+                        && !childStyle.heightPercent;
                 // flex-grow: explicit CSS > td/th default (1) > 0
                 float fGrow   = childStyle.flexGrow   != TesseraStyle.UNSET_F ? childStyle.flexGrow
+                              : isVirtualList ? 1f
                               : isTdTh ? 1f : 0f;
                 // flex-shrink: explicit CSS > 1 when item can grow, 0 otherwise
                 float fShrink = childStyle.flexShrink != TesseraStyle.UNSET_F ? childStyle.flexShrink
                               : fGrow > 0 ? 1f : 0f;
-                int   fBasis  = childStyle.flexBasis; // TesseraStyle.UNSET = auto
+                int   fBasis  = childStyle.flexBasis != TesseraStyle.UNSET ? childStyle.flexBasis
+                              : isVirtualList ? 0 : TesseraStyle.UNSET;
                 int   fOrder  = childStyle.order  != TesseraStyle.UNSET ? childStyle.order  : 0;
                 int   fZIndex = childStyle.zIndex  != TesseraStyle.UNSET ? childStyle.zIndex : 0;
                 int mT = childStyle.marginTop    != TesseraStyle.UNSET ? childStyle.marginTop    : 0;
@@ -322,8 +339,10 @@ public final class TesseraTemplateRenderer {
                 }
 
                 // v-for: expand into multiple nodes (v-show hidden marker already on effectiveChild)
+                // <virtual-list> handles its own v-for internally — skip generic expansion for it.
                 String vFor = effectiveChild.vFor();
-                if (!vFor.isEmpty() && vFor.contains(" in ")) {
+                if (!vFor.isEmpty() && vFor.contains(" in ")
+                        && !effectiveChild.tag().equals("virtual-list")) {
                     String[] parts = vFor.split(" in ", 2);
                     String varName = parts[0].trim();
                     String listKey = parts[1].trim();
@@ -584,6 +603,9 @@ public final class TesseraTemplateRenderer {
                 } else if (initialValue != null && !initialValue.isEmpty()) {
                     input.text(initialValue);
                 }
+                if ((idAttr == null || idAttr.isEmpty()) && inputStates != null) {
+                    LOGGER.warn("[TesseraUI] <input> without id cannot persist state across rebuilds");
+                }
                 if (placeholder != null && !placeholder.isEmpty()) input.placeholder(placeholder);
                 input.maxLength(maxLen);
                 if (style.background  != TesseraStyle.UNSET) input.bgColor(style.background);
@@ -637,6 +659,9 @@ public final class TesseraTemplateRenderer {
                 } else if (taInitValue != null && !taInitValue.isEmpty()) {
                     ta.text(taInitValue);
                 }
+                if ((idAttr == null || idAttr.isEmpty()) && inputStates != null) {
+                    LOGGER.warn("[TesseraUI] <textarea> without id cannot persist state across rebuilds");
+                }
                 if (taPlaceholder != null && !taPlaceholder.isEmpty()) ta.placeholder(taPlaceholder);
                 ta.maxLength(taMaxLen);
                 if (style.background  != TesseraStyle.UNSET) ta.bgColor(style.background);
@@ -679,6 +704,7 @@ public final class TesseraTemplateRenderer {
                 String handler = node.onClickHandler();
                 if (!handler.isEmpty() && handlers.containsKey(handler))
                     btn.onClick(handlers.get(handler));
+                else warnMissingHandler("onclick", handler, node);
                 yield btn;
             }
 
@@ -861,7 +887,7 @@ public final class TesseraTemplateRenderer {
 
             case "badge" -> {
                 String text = resolveNodeText(node, model);
-                int bg = style.background != TesseraStyle.UNSET ? style.background : TesseraPalette.BG2;
+                int bg = style.background != TesseraStyle.UNSET ? style.background : 0x00000000;
                 int fg = style.color      != TesseraStyle.UNSET ? style.color      : TesseraPalette.CREAM;
                 int padH = (style.paddingLeft  != TesseraStyle.UNSET ? style.paddingLeft  : 5)
                          + (style.paddingRight != TesseraStyle.UNSET ? style.paddingRight : 5);
@@ -975,7 +1001,9 @@ public final class TesseraTemplateRenderer {
             // ── Virtual list ──────────────────────────────────────────────────
             case "virtual-list" -> {
                 int vlW = wVal > 0 ? wVal : (inheritWidth && availW > 0 ? availW : 100);
-                int vlH = hVal > 0 ? hVal : 80;
+                int vlH = hRaw != TesseraStyle.UNSET ? hVal
+                        : inheritHeight && availH > 0 ? availH
+                        : 80;
                 int vlRowH = parseIntAttr(node.attr("row-height"), 16);
                 String vFor = node.vFor();
                 java.util.List<TesseraModel> vlItems = new java.util.ArrayList<>();
@@ -1002,11 +1030,17 @@ public final class TesseraTemplateRenderer {
                 final Map<String, TesseraInputState> finalInputStates = inputStates;
                 final TesseraStyle finalInherited = inherited.merge(style);
                 java.util.function.Function<TesseraModel, TesseraWidget> factory = rowModel -> {
+                    TesseraModel scopedRowModel = key -> {
+                        if (key != null && key.startsWith(finalVarName + ".")) {
+                            return rowModel.resolve(key.substring(finalVarName.length() + 1));
+                        }
+                        return rowModel.resolve(key);
+                    };
                     TesseraPanel rowPanel = TesseraPanel.row(0, 0, finalVlW, finalVlRowH).gap(2);
                     java.util.Deque<TesseraNode> rowAncestors = new java.util.ArrayDeque<>();
                     for (TesseraNode child : rowTemplate) {
-                        TesseraNode resolved2 = TesseraForEach.resolveAttrs(child, rowModel);
-                        TesseraWidget w = buildWidget(resolved2, finalSheet, rowModel,
+                        TesseraNode resolved2 = TesseraForEach.resolveAttrs(child, scopedRowModel);
+                        TesseraWidget w = buildWidget(resolved2, finalSheet, scopedRowModel,
                                 finalHandlers, finalInputHandlers, finalInputStates,
                                 rowAncestors, finalVlW, finalVlRowH, true, false, depth + 1, finalInherited);
                         if (w != null) rowPanel.add(w);
@@ -1069,10 +1103,15 @@ public final class TesseraTemplateRenderer {
             widget.setVisible(false);
         }
         // tooltip attr: wire tooltip text (resolves bindings)
+        // tooltip-i18n: resolves a static i18n key via Minecraft language system (no model binding)
         if (widget != null) {
             String tipAttr = node.attr("tooltip");
             if (!tipAttr.isBlank()) {
                 widget.setTooltip(TesseraBindingResolver.resolve(tipAttr, model));
+            }
+            String tipI18n = node.attr("tooltip-i18n");
+            if (!tipI18n.isBlank()) {
+                widget.setTooltip(TesseraI18n.translate(tipI18n));
             }
         }
         // draggable attr on any widget that is a TesseraPanel
@@ -1087,6 +1126,13 @@ public final class TesseraTemplateRenderer {
             }
         }
         return widget;
+    }
+
+    private static void warnMissingHandler(String attr, String handler, TesseraNode node) {
+        if (handler == null || handler.isBlank()) return;
+        if (handler.contains("{{")) {
+            LOGGER.warn("[TesseraUI] Unresolved binding in {} on <{}>: {}", attr, node.tag(), handler);
+        }
     }
 
     /**

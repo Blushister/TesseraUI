@@ -2,7 +2,7 @@ package com.tesseraui;
 
 import net.minecraft.client.gui.GuiGraphics;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,6 +30,7 @@ import java.util.function.Function;
 public final class TesseraVirtualList extends TesseraElement {
 
     private static final int SCROLLBAR_WIDTH = 3;
+    private static final int CACHE_BUFFER_ROWS = 8;
 
     private final List<TesseraModel> items;
     private final Function<TesseraModel, TesseraWidget> rowFactory;
@@ -39,7 +40,7 @@ public final class TesseraVirtualList extends TesseraElement {
     private int scrollY = 0;
 
     /** Cache: index → widget. Widgets are created lazily and retained. */
-    private final Map<Integer, TesseraWidget> rowCache = new HashMap<>();
+    private final Map<Integer, TesseraWidget> rowCache = new LinkedHashMap<>(16, 0.75f, true);
 
     private int background = 0;
     private int rowGap = 0;
@@ -122,6 +123,8 @@ public final class TesseraVirtualList extends TesseraElement {
             if (row.isVisible()) row.render(g, mx, my);
         }
 
+        pruneCache(firstVisible, lastVisible);
+
         g.disableScissor();
 
         // Scrollbar
@@ -160,9 +163,10 @@ public final class TesseraVirtualList extends TesseraElement {
     /** Variant that also takes the mouse position for bounds checking. */
     public boolean mouseScrolled(double mx, double my, double dy) {
         if (mx < x || mx >= x + width || my < y || my >= y + height) return false;
+        int prev = scrollY;
         int delta = (int)(dy * rowHeight);
         scrollY = Math.max(0, Math.min(maxScroll(), scrollY - delta));
-        return true;
+        return scrollY != prev;
     }
 
     @Override
@@ -191,6 +195,36 @@ public final class TesseraVirtualList extends TesseraElement {
 
     private boolean isInBounds() { return true; } // used internally, real bounds check elsewhere
 
+    // ── Keyboard forwarding ───────────────────────────────────────────────────
+
+    /**
+     * Forwards key events to all cached row widgets until one consumes it.
+     * Required so that {@link TesseraInput} widgets inside virtual-list rows
+     * can receive key input (backspace, arrows, ctrl+a, etc.) after being clicked.
+     */
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!visible) return false;
+        for (TesseraWidget row : rowCache.values()) {
+            if (row.keyPressed(keyCode, scanCode, modifiers)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Forwards typed characters to all cached row widgets until one consumes it.
+     * Required so that {@link TesseraInput} widgets inside virtual-list rows
+     * can receive character input after being focused via mouse click.
+     */
+    @Override
+    public boolean charTyped(char c, int modifiers) {
+        if (!visible) return false;
+        for (TesseraWidget row : rowCache.values()) {
+            if (row.charTyped(c, modifiers)) return true;
+        }
+        return false;
+    }
+
     // ── Cache management ──────────────────────────────────────────────────────
 
     /**
@@ -201,6 +235,29 @@ public final class TesseraVirtualList extends TesseraElement {
         rowCache.clear();
         scrollY = Math.min(scrollY, maxScroll());
     }
+
+    private void pruneCache(int firstVisible, int lastVisible) {
+        int min = Math.max(0, firstVisible - CACHE_BUFFER_ROWS);
+        int max = Math.min(items.size() - 1, lastVisible + CACHE_BUFFER_ROWS);
+        rowCache.entrySet().removeIf(e -> {
+            int index = e.getKey();
+            if (index >= min && index <= max) return false;
+            return !containsFocused(e.getValue());
+        });
+    }
+
+    private static boolean containsFocused(TesseraWidget widget) {
+        if (widget == null) return false;
+        if (widget.isFocused()) return true;
+        if (widget instanceof TesseraPanel panel) {
+            for (TesseraWidget child : panel.debugChildren()) {
+                if (containsFocused(child)) return true;
+            }
+        }
+        return false;
+    }
+
+    int cachedRowCount() { return rowCache.size(); }
 
     /** Returns the current scroll offset in pixels. */
     public int getScrollY() { return scrollY; }
