@@ -4,7 +4,7 @@
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=creativecommons&logoColor=white)
 ![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-E07030?style=flat-square)
 ![Java](https://img.shields.io/badge/Java-21-5382A1?style=flat-square&logo=openjdk&logoColor=white)
-![License](https://img.shields.io/badge/license-GPL--v3%20%2F%20Commercial-4A90D9?style=flat-square)
+![License](https://img.shields.io/badge/license-LGPL--3.0-4A90D9?style=flat-square)
 [![Wiki](https://img.shields.io/badge/wiki-read%20the%20docs-805AD5?style=flat-square)](https://github.com/Blushister/TesseraUI/wiki)
 
 Write Minecraft GUI screens in HTML and CSS. TesseraUI parses them at runtime and renders native widgets — no JavaScript, no browser engine.
@@ -162,11 +162,4 @@ Full reference on the **[GitHub Wiki](https://github.com/Blushister/TesseraUI/wi
 
 ## License
 
-TesseraUI uses a **dual license** model:
-
-| Use case | License |
-|----------|---------|
-| Open-source mod (GPL-3.0 compatible) | **Free** — [GPL-3.0](LICENSE) |
-| Closed-source mod, paid mod, no source published | **Commercial license required** — [see terms](COMMERCIAL_LICENSE.md) |
-
-To obtain a commercial license, contact [Blushister on GitHub](https://github.com/Blushister).
+[LGPL-3.0](LICENSE) — you can use TesseraUI in any mod (open-source or closed-source, free or paid) without restrictions. If you modify TesseraUI itself, those modifications must be published under LGPL-3.0.
