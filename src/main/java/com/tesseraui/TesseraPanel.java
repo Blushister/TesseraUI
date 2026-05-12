@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TesseraPanel implements TesseraWidget {
 
@@ -109,6 +111,15 @@ public class TesseraPanel implements TesseraWidget {
     private TesseraStyleSheet          cssSheet       = null;
     private boolean                    cssWasHovered  = false;
     private boolean                    cssAnimsStarted = false;
+
+    // ── Direct Java API animations (no CSS file required) ────────────────────
+    private List<TesseraKeyframes>     directKeyframes    = null;
+    private List<TesseraAnimationDef>  directAnimDefs     = null;
+    private boolean                    directAnimsStarted = false;
+    private List<TesseraTransitionDef> directTransitions  = null;
+    private TesseraStyle               directBase         = null;
+    private TesseraStyle               directHover        = null;
+    private boolean                    directWasHovered   = false;
 
     // ── Drag & Drop ────────────────────────────────────────────────────────────
     private boolean         draggable        = false;
@@ -310,6 +321,121 @@ public class TesseraPanel implements TesseraWidget {
     public TesseraPanel cssAnimation(List<TesseraAnimationDef> defs, TesseraStyleSheet sheet) {
         this.cssAnimDefs = defs;
         this.cssSheet    = sheet;
+        return this;
+    }
+
+    // ── Direct Java API: keyframe animations ──────────────────────────────────
+
+    /**
+     * Starts a {@link TesseraKeyframes} animation on this panel in pure Java —
+     * no CSS file needed. Runs indefinitely.
+     *
+     * <pre>{@code
+     * TesseraKeyframes kf = TesseraKeyframes.builder("pulse")
+     *     .from(s -> { s.background = 0xFF1a2a1a; s.borderColor = 0xFF22c55e; })
+     *     .at(50, s -> { s.background = 0xFF14532d; s.borderColor = 0xFF4ade80; })
+     *     .to(s ->  { s.background = 0xFF1a2a1a; s.borderColor = 0xFF22c55e; })
+     *     .build();
+     * panel.animate(kf, 1500, TesseraEasing.EASE_IN_OUT);
+     * }</pre>
+     */
+    public TesseraPanel animate(TesseraKeyframes kf, int durationMs, TesseraEasing easing) {
+        return animate(kf, durationMs, easing, -1, false);
+    }
+
+    /** @param iterations number of cycles; {@code -1} = infinite */
+    public TesseraPanel animate(TesseraKeyframes kf, int durationMs, TesseraEasing easing,
+                                int iterations) {
+        return animate(kf, durationMs, easing, iterations, false);
+    }
+
+    /**
+     * @param iterations number of cycles; {@code -1} = infinite
+     * @param alternate  if {@code true}, odd cycles play in reverse (ping-pong)
+     */
+    public TesseraPanel animate(TesseraKeyframes kf, int durationMs, TesseraEasing easing,
+                                int iterations, boolean alternate) {
+        if (directKeyframes == null) {
+            directKeyframes = new ArrayList<>();
+            directAnimDefs  = new ArrayList<>();
+        }
+        directKeyframes.add(kf);
+        directAnimDefs.add(TesseraAnimationDef.of(kf.name(), durationMs, easing, 0, iterations, alternate));
+        return this;
+    }
+
+    // ── Direct Java API: hover transitions ────────────────────────────────────
+
+    /**
+     * Adds a smooth hover transition for one CSS property in pure Java —
+     * no CSS file needed. Call multiple times to transition several properties.
+     *
+     * <pre>{@code
+     * panel.hoverTransition("background",  250, TesseraEasing.EASE_OUT, 0xFF1e2433, 0xFF2a3450)
+     *      .hoverTransition("border-color", 250, TesseraEasing.EASE_OUT, 0xFFB87333, 0xFFE8A24A);
+     * }</pre>
+     *
+     * @param property   one of: {@code "background"}, {@code "border-color"}, {@code "color"}
+     * @param durationMs transition duration in milliseconds
+     * @param easing     timing function
+     * @param baseColor  ARGB color in normal state
+     * @param hoverColor ARGB color on hover
+     */
+    public TesseraPanel hoverTransition(String property, int durationMs, TesseraEasing easing,
+                                        int baseColor, int hoverColor) {
+        if (directTransitions == null) {
+            directTransitions = new ArrayList<>();
+            directBase        = new TesseraStyle();
+            directHover       = new TesseraStyle();
+        }
+        directTransitions.add(TesseraTransitionDef.of(property, durationMs, easing, 0));
+        switch (property.trim().toLowerCase()) {
+            case "background", "background-color" -> {
+                directBase.background       = baseColor;
+                directHover.hoverBackground = hoverColor;
+            }
+            case "border-color" -> {
+                directBase.borderColor       = baseColor;
+                directHover.hoverBorderColor = hoverColor;
+            }
+            case "color" -> {
+                directBase.color       = baseColor;
+                directHover.hoverColor = hoverColor;
+            }
+        }
+        return this;
+    }
+
+    // ── Direct Java API: v-for / v-if helpers ────────────────────────────────
+
+    /**
+     * Adds one widget for each item in the list — Java equivalent of {@code v-for}.
+     *
+     * <pre>{@code
+     * panel.addFor(playerList, p ->
+     *     new TesseraLabel(0, 0, 120, 10, p.getName()).color(TesseraPalette.CREAM));
+     * }</pre>
+     */
+    public <T> TesseraPanel addFor(List<T> items, Function<T, TesseraWidget> factory) {
+        for (T item : items) add(factory.apply(item));
+        return this;
+    }
+
+    /**
+     * Adds {@code widget} only when {@code condition} is {@code true} —
+     * Java equivalent of {@code v-if}.
+     */
+    public TesseraPanel addIf(boolean condition, TesseraWidget widget) {
+        if (condition) add(widget);
+        return this;
+    }
+
+    /**
+     * Adds a widget produced by {@code factory} only when {@code condition} is {@code true}.
+     * The factory is not called when the condition is false.
+     */
+    public TesseraPanel addIf(boolean condition, Supplier<TesseraWidget> factory) {
+        if (condition) add(factory.get());
         return this;
     }
 
@@ -777,15 +903,26 @@ public class TesseraPanel implements TesseraWidget {
             }
             cssAnimsStarted = true;
         }
+        if (!directAnimsStarted && directKeyframes != null) {
+            for (int i = 0; i < directKeyframes.size(); i++) {
+                TesseraAnimationEngine.startKeyframeAnimation(this, directKeyframes.get(i), directAnimDefs.get(i));
+            }
+            directAnimsStarted = true;
+        }
         if (cssTransitions != null && cssBaseStyle != null && hovered != cssWasHovered) {
             TesseraAnimationEngine.onHoverChanged(this, hovered, cssBaseStyle, cssHoverStyle, cssTransitions);
             cssWasHovered = hovered;
         }
-        if (cssTransitions != null || cssAnimDefs != null) {
+        if (directTransitions != null && hovered != directWasHovered) {
+            TesseraAnimationEngine.onHoverChanged(this, hovered, directBase, directHover, directTransitions);
+            directWasHovered = hovered;
+        }
+        if (cssTransitions != null || cssAnimDefs != null || directTransitions != null || directKeyframes != null) {
             TesseraAnimatedValues anim = TesseraAnimationEngine.getValues(this);
             if (anim.hasBackground())  bg               = anim.background();
             if (anim.hasBorderColor()) bColor           = anim.borderColor();
             if (anim.hasOpacity())     effectiveOpacity = anim.opacity();
+            if (anim.hasColor())       propagateColorToChildren(anim.color());
         }
 
         int bTop    = (hovered && hoverBorderTopColor    != 0) ? hoverBorderTopColor    : borderTopColor;
