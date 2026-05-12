@@ -151,9 +151,10 @@ public final class TesseraVirtualList extends TesseraElement {
      */
     public boolean mouseScrolled(double dy) {
         if (!isInBounds()) return false;
+        int prev = scrollY;
         int delta = (int)(dy * rowHeight);
         scrollY = Math.max(0, Math.min(maxScroll(), scrollY - delta));
-        return true;
+        return scrollY != prev;
     }
 
     /** Variant that also takes the mouse position for bounds checking. */

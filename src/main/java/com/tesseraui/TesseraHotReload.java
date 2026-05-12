@@ -104,6 +104,7 @@ public final class TesseraHotReload {
     }
 
     private static void activate(Path root) {
+        if (resourcesRoot != null) return;
         resourcesRoot = root.toAbsolutePath().normalize();
         LOGGER.info("[TesseraUI] Hot reload ENABLED — watching: {}", resourcesRoot);
         startWatcher(resourcesRoot.resolve("assets"));
@@ -152,7 +153,12 @@ public final class TesseraHotReload {
         String[] parts = resourceId.split(":", 2);
         String namespace = parts[0];
         String path      = parts.length > 1 ? parts[1] : parts[0];
-        return resourcesRoot.resolve("assets").resolve(namespace).resolve(path + ext);
+        Path assetsRoot = resourcesRoot.resolve("assets");
+        Path resolved   = assetsRoot.resolve(namespace).resolve(path + ext).normalize();
+        if (!resolved.startsWith(assetsRoot)) {
+            throw new SecurityException("Path traversal detected in resourceId: " + resourceId);
+        }
+        return resolved;
     }
 
     /**

@@ -118,20 +118,20 @@ public final class TesseraDragContext {
         int origY = draggedWidget.bounds().y();
         draggedWidget.setPosition(gx, gy);
 
-        // Semi-transparent ghost overlay effect
-        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 0.7f);
-        draggedWidget.render(g, -1, -1);
-        com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        try {
+            // Semi-transparent ghost overlay effect
+            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 0.7f);
+            draggedWidget.render(g, -1, -1);
 
-        // Draw a highlight border on the ghost
-        g.fill(gx, gy, gx + w, gy + 1, TesseraPalette.COPPER_HI);
-        g.fill(gx, gy + h - 1, gx + w, gy + h, TesseraPalette.COPPER_HI);
-        g.fill(gx, gy, gx + 1, gy + h, TesseraPalette.COPPER_HI);
-        g.fill(gx + w - 1, gy, gx + w, gy + h, TesseraPalette.COPPER_HI);
-
-        // Restore original position
-        draggedWidget.setPosition(origX, origY);
-
-        g.pose().popPose();
+            // Draw a highlight border on the ghost
+            g.fill(gx, gy, gx + w, gy + 1, TesseraPalette.COPPER_HI);
+            g.fill(gx, gy + h - 1, gx + w, gy + h, TesseraPalette.COPPER_HI);
+            g.fill(gx, gy, gx + 1, gy + h, TesseraPalette.COPPER_HI);
+            g.fill(gx + w - 1, gy, gx + w, gy + h, TesseraPalette.COPPER_HI);
+        } finally {
+            com.mojang.blaze3d.systems.RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+            draggedWidget.setPosition(origX, origY);
+            g.pose().popPose();
+        }
     }
 }

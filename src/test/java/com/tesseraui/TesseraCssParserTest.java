@@ -76,6 +76,29 @@ class TesseraCssParserTest {
     }
 
     @Test
+    void parseColor_rgba_alphaClampedAboveOne() {
+        // alpha > 1 must clamp to 1 (0xFF), not wrap via & 0xFF
+        int c = TesseraCssParser.parseColor("rgba(0, 0, 0, 2.0)");
+        assertEquals(0xFF, (c >>> 24) & 0xFF, "alpha > 1 must clamp to 0xFF");
+    }
+
+    @Test
+    void parseColor_rgba_alphaClampedBelowZero() {
+        // alpha < 0 must clamp to 0
+        int c = TesseraCssParser.parseColor("rgba(255, 255, 255, -1.0)");
+        assertEquals(0x00, (c >>> 24) & 0xFF, "alpha < 0 must clamp to 0x00");
+    }
+
+    @Test
+    void parse_multilineComment_ignored() {
+        String css = ".box { /* this is\n   a multiline\n   comment */ background: #112233; }";
+        TesseraStyleSheet sheet = TesseraCssParser.parse(css);
+        TesseraNode node = new TesseraNode("div", Map.of("class", "box"), List.of(), "");
+        TesseraStyle s = sheet.resolve(node, new ArrayDeque<>());
+        assertEquals(0xFF112233, s.background, "background must be parsed even after multiline comment");
+    }
+
+    @Test
     void parseColor_unknownThrows() {
         assertThrows(IllegalArgumentException.class,
                 () -> TesseraCssParser.parseColor("notacolor"));
@@ -511,6 +534,164 @@ class TesseraCssParserTest {
         TesseraStyle base  = new TesseraStyle(); base.widthCalc = "calc(80% - 5px)";
         TesseraStyle other = new TesseraStyle(); // null
         assertEquals("calc(80% - 5px)", base.merge(other).widthCalc);
+    }
+
+    // ── transition ────────────────────────────────────────────────────────────
+
+    @Test
+    void parse_transition_singleProperty() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".btn { transition: background-color 200ms ease-out }");
+        TesseraStyle s = resolveClass(sheet, "btn");
+        assertNotNull(s.transitions, "transitions must be non-null");
+        assertEquals(1, s.transitions.size());
+        TesseraTransitionDef def = s.transitions.get(0);
+        assertEquals("background-color", def.property());
+        assertEquals(200, def.durationMs());
+        assertEquals(TesseraEasing.EASE_OUT, def.easing());
+        assertEquals(0, def.delayMs());
+    }
+
+    @Test
+    void parse_transition_withDelay() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".btn { transition: color 300ms ease-in 50ms }");
+        TesseraStyle s = resolveClass(sheet, "btn");
+        assertNotNull(s.transitions);
+        TesseraTransitionDef def = s.transitions.get(0);
+        assertEquals("color", def.property());
+        assertEquals(300, def.durationMs());
+        assertEquals(TesseraEasing.EASE_IN, def.easing());
+        assertEquals(50, def.delayMs());
+    }
+
+    @Test
+    void parse_transition_multiple_commaListed() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".card { transition: background-color 200ms ease-out, border-color 150ms linear }");
+        TesseraStyle s = resolveClass(sheet, "card");
+        assertNotNull(s.transitions);
+        assertEquals(2, s.transitions.size());
+        assertEquals("background-color", s.transitions.get(0).property());
+        assertEquals(200, s.transitions.get(0).durationMs());
+        assertEquals("border-color",     s.transitions.get(1).property());
+        assertEquals(150, s.transitions.get(1).durationMs());
+        assertEquals(TesseraEasing.LINEAR, s.transitions.get(1).easing());
+    }
+
+    @Test
+    void parse_transition_legacyFields_set() {
+        // transitionDurationMs and transitionProperty should mirror the first entry
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".btn { transition: background 400ms }");
+        TesseraStyle s = resolveClass(sheet, "btn");
+        assertEquals(400, s.transitionDurationMs);
+        assertEquals("background", s.transitionProperty);
+    }
+
+    @Test
+    void parse_transition_durationMs_parsingWithMs() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(".x { transition: color 500ms }");
+        assertEquals(500, resolveClass(sheet, "x").transitions.get(0).durationMs());
+    }
+
+    @Test
+    void parse_transition_durationS_parsedToMs() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(".x { transition: color 1s }");
+        assertEquals(1000, resolveClass(sheet, "x").transitions.get(0).durationMs());
+    }
+
+    // ── animation ────────────────────────────────────────────────────────────
+
+    @Test
+    void parse_animation_basic() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".card { animation: pulse 1500ms ease-in-out infinite }");
+        TesseraStyle s = resolveClass(sheet, "card");
+        assertNotNull(s.animations, "animations must be non-null");
+        assertEquals(1, s.animations.size());
+        TesseraAnimationDef def = s.animations.get(0);
+        assertEquals("pulse", def.name());
+        assertEquals(1500, def.durationMs());
+        assertEquals(TesseraEasing.EASE_IN_OUT, def.easing());
+        assertEquals(-1, def.iterationCount(), "infinite must map to -1");
+        assertFalse(def.alternate());
+    }
+
+    @Test
+    void parse_animation_alternate() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".box { animation: glow 800ms linear infinite alternate }");
+        TesseraStyle s = resolveClass(sheet, "box");
+        assertNotNull(s.animations);
+        assertTrue(s.animations.get(0).alternate(), "alternate flag must be set");
+    }
+
+    @Test
+    void parse_animation_fixedIterations() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".btn { animation: flash 200ms linear 3 }");
+        TesseraStyle s = resolveClass(sheet, "btn");
+        assertNotNull(s.animations);
+        assertEquals(3, s.animations.get(0).iterationCount());
+    }
+
+    @Test
+    void parse_animation_durationS_parsedToMs() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(
+                ".x { animation: spin 2s linear infinite }");
+        assertEquals(2000, resolveClass(sheet, "x").animations.get(0).durationMs());
+    }
+
+    // ── @keyframes parsing into stylesheet registry ───────────────────────────
+
+    @Test
+    void parse_keyframes_registeredInStylesheet() {
+        String css = "@keyframes fade { from { opacity: 0 } to { opacity: 1 } } .box { background: #111111 }";
+        TesseraStyleSheet sheet = TesseraCssParser.parse(css);
+        TesseraKeyframes kf = sheet.getKeyframes("fade");
+        assertNotNull(kf, "@keyframes 'fade' must be registered in the stylesheet");
+        assertEquals("fade", kf.name());
+    }
+
+    @Test
+    void parse_keyframes_stopsCorrectlyParsed() {
+        String css = "@keyframes appear { from { opacity: 0 } to { opacity: 1 } }";
+        TesseraStyleSheet sheet = TesseraCssParser.parse(css);
+        TesseraKeyframes kf = sheet.getKeyframes("appear");
+        assertNotNull(kf);
+        assertEquals(2, kf.stops().size());
+        assertEquals(0f,   kf.stops().get(0).progress(), 0.001f);
+        assertEquals(1f,   kf.stops().get(1).progress(), 0.001f);
+        assertEquals(0f,   kf.stops().get(0).style().opacity, 0.001f);
+        assertEquals(1f,   kf.stops().get(1).style().opacity, 0.001f);
+    }
+
+    @Test
+    void parse_keyframes_percentageStop_parsedCorrectly() {
+        String css = "@keyframes pulse { 0% { background: #111111 } 50% { background: #888888 } 100% { background: #111111 } }";
+        TesseraStyleSheet sheet = TesseraCssParser.parse(css);
+        TesseraKeyframes kf = sheet.getKeyframes("pulse");
+        assertNotNull(kf);
+        assertEquals(3, kf.stops().size());
+        assertEquals(0.5f, kf.stops().get(1).progress(), 0.001f);
+        assertEquals(0xFF888888, kf.stops().get(1).style().background);
+    }
+
+    @Test
+    void parse_keyframes_backgroundColor_parsedInStop() {
+        String css = "@keyframes bg { from { background: #001122 } to { background: #334455 } }";
+        TesseraStyleSheet sheet = TesseraCssParser.parse(css);
+        TesseraKeyframes kf = sheet.getKeyframes("bg");
+        assertNotNull(kf);
+        assertEquals(0xFF001122, kf.stops().get(0).style().background);
+        assertEquals(0xFF334455, kf.stops().get(1).style().background);
+    }
+
+    @Test
+    void parse_keyframes_unknownName_returnsNull() {
+        TesseraStyleSheet sheet = TesseraCssParser.parse(".box { background: #111111 }");
+        assertNull(sheet.getKeyframes("nonexistent"));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

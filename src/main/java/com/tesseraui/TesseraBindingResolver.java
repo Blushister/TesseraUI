@@ -64,27 +64,72 @@ public final class TesseraBindingResolver {
         return s;
     }
 
-    private static boolean evaluateCondition(String cond, TesseraModel model) {
+    /**
+     * Evaluates {@code cond} as a boolean against {@code model}.
+     * Supports comparison operators (>, <, >=, <=, ==, !=), string literals with
+     * single or double quotes, and truthy model-key lookups.
+     * Package-private so {@link TesseraTemplateRenderer} can call it for v-if/v-show
+     * attributes without requiring {@code {{ }}} wrappers.
+     */
+    static boolean evaluateCondition(String cond, TesseraModel model) {
         for (String op : new String[]{">=", "<=", "!=", ">", "<", "=="}) {
-            int idx = cond.indexOf(op);
+            int idx = findOperatorQuoteAware(cond, op);
             if (idx >= 0) {
                 String left  = cond.substring(0, idx).trim();
                 String right = cond.substring(idx + op.length()).trim();
-                double lv = toDouble(evaluateArithmetic(left, model));
-                double rv = toDouble(stripQuotes(right));
+                String lv = evaluateArithmetic(left, model);
+
+                boolean rightIsQuoted = right.length() >= 2
+                    && ((right.charAt(0) == '\'' && right.charAt(right.length() - 1) == '\'')
+                     || (right.charAt(0) == '"'  && right.charAt(right.length() - 1) == '"'));
+                // Quoted → strip quotes; unquoted → resolve through model or treat as literal.
+                String rv = rightIsQuoted ? stripQuotes(right) : resolveRhs(right, model);
+
+                if (op.equals("==") || op.equals("!=")) {
+                    // String path when: RHS quoted, LHS key missing, or either side non-numeric.
+                    boolean eitherNonNumeric = rightIsQuoted
+                        || lv == null
+                        || !isNumericLiteral(rv)
+                        || !isNumericLiteral(lv);
+                    if (eitherNonNumeric) {
+                        String lvStr = lv != null ? lv : "";
+                        return op.equals("==") ? lvStr.equals(rv) : !lvStr.equals(rv);
+                    }
+                }
+
+                double dlv = toDouble(lv);
+                double drv = toDouble(rv);
                 return switch (op) {
-                    case ">"  -> lv > rv;
-                    case "<"  -> lv < rv;
-                    case ">=" -> lv >= rv;
-                    case "<=" -> lv <= rv;
-                    case "==" -> lv == rv;
-                    case "!=" -> lv != rv;
+                    case ">"  -> dlv > drv;
+                    case "<"  -> dlv < drv;
+                    case ">=" -> dlv >= drv;
+                    case "<=" -> dlv <= drv;
+                    case "==" -> dlv == drv;
+                    case "!=" -> dlv != drv;
                     default   -> false;
                 };
             }
         }
         String val = model.resolve(cond);
         return isTruthy(val);
+    }
+
+    /** Resolves an unquoted RHS: model key → arithmetic → raw string fallback. */
+    private static String resolveRhs(String right, TesseraModel model) {
+        String resolved = evaluateArithmetic(right, model);
+        return resolved != null ? resolved : right;
+    }
+
+    /** Finds {@code op} in {@code expr}, skipping occurrences inside single or double quotes. */
+    private static int findOperatorQuoteAware(String expr, String op) {
+        boolean inSingle = false, inDouble = false;
+        for (int i = 0; i < expr.length(); i++) {
+            char c = expr.charAt(i);
+            if      (c == '\'' && !inDouble) inSingle = !inSingle;
+            else if (c == '"'  && !inSingle) inDouble = !inDouble;
+            else if (!inSingle && !inDouble && expr.startsWith(op, i)) return i;
+        }
+        return -1;
     }
 
     private static String evaluateArithmetic(String expr, TesseraModel model) {

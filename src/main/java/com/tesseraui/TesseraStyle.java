@@ -40,7 +40,8 @@ public final class TesseraStyle {
     public int     marginRight  = UNSET;
     public int     marginBottom = UNSET;
     public int     marginLeft   = UNSET;
-    public boolean marginTopAuto = false;
+    public boolean marginTopAuto    = false;
+    public boolean marginTopAutoSet = false;
 
     public int gap  = UNSET;
     public int border = UNSET;
@@ -117,6 +118,16 @@ public final class TesseraStyle {
 
     public TesseraStyle() {}
 
+    /**
+     * Sets {@code marginTopAuto} and marks the field as explicitly defined,
+     * so {@link #merge} can override a base style that set it differently.
+     */
+    public TesseraStyle setMarginTopAuto(boolean auto) {
+        this.marginTopAuto    = auto;
+        this.marginTopAutoSet = true;
+        return this;
+    }
+
     public int padding() { return paddingTop != UNSET ? paddingTop : UNSET; }
     public int margin()  { return marginTop  != UNSET ? marginTop  : UNSET; }
 
@@ -148,7 +159,10 @@ public final class TesseraStyle {
         r.marginRight  = other.marginRight  != UNSET ? other.marginRight  : this.marginRight;
         r.marginBottom = other.marginBottom != UNSET ? other.marginBottom : this.marginBottom;
         r.marginLeft   = other.marginLeft   != UNSET ? other.marginLeft   : this.marginLeft;
-        r.marginTopAuto = other.marginTopAuto || this.marginTopAuto;
+        // Direct field assignment (marginTopAuto = true without marginTopAutoSet) is treated as explicit.
+        boolean otherHasExplicit = other.marginTopAutoSet || other.marginTopAuto;
+        r.marginTopAuto    = otherHasExplicit ? other.marginTopAuto : this.marginTopAuto;
+        r.marginTopAutoSet = otherHasExplicit || this.marginTopAutoSet || this.marginTopAuto;
 
         r.gap    = other.gap    != UNSET ? other.gap    : this.gap;
         r.border = other.border != UNSET ? other.border : this.border;

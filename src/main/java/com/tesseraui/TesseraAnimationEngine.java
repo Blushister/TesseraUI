@@ -123,29 +123,30 @@ public final class TesseraAnimationEngine {
     public static TesseraAnimatedValues getValues(Object widget) {
         long now = System.nanoTime();
 
-        int  bg     = 0;
-        int  color  = 0;
+        int   bg      = 0;
+        int   color   = 0;
         float opacity = -1f;
-        int  border = 0;
+        int   border  = 0;
+        boolean bgSet = false, colorSet = false, borderSet = false;
 
         // ── Transitions ──────────────────────────────────────────────────────
         List<TransitionState> trList = transitions.get(widget);
         if (trList != null) {
-            trList.removeIf(TransitionState::isExpired);
+            // Render before removing so the final interpolated value (t=1) is shown on the last frame.
             for (TransitionState ts : trList) {
                 float t = ts.progress(now);
                 switch (ts.property) {
-                    case "background", "background-color" -> bg     = lerpColor(ts.from, ts.to, t);
-                    case "color"                          -> color  = lerpColor(ts.from, ts.to, t);
-                    case "border-color"                   -> border = lerpColor(ts.from, ts.to, t);
+                    case "background", "background-color" -> { bg     = lerpColor(ts.from, ts.to, t); bgSet     = true; }
+                    case "color"                          -> { color  = lerpColor(ts.from, ts.to, t); colorSet  = true; }
+                    case "border-color"                   -> { border = lerpColor(ts.from, ts.to, t); borderSet = true; }
                 }
             }
+            trList.removeIf(ts -> ts.isExpired(now));
         }
 
         // ── Keyframe animations ───────────────────────────────────────────────
         List<KeyframeState> kfList = keyframeAnims.get(widget);
         if (kfList != null) {
-            kfList.removeIf(KeyframeState::isExpired);
             for (KeyframeState ks : kfList) {
                 float progress = ks.progress(now);
                 TesseraKeyframes.Stop[] bracket = ks.keyframes.bracket(progress);
@@ -156,34 +157,40 @@ public final class TesseraAnimationEngine {
                 float localT = span <= 0 ? 1f : (progress - from.progress()) / span;
                 localT = ks.def.easing().apply(localT);
 
-                // Interpolate each property present in either stop
                 TesseraStyle fs = from.style(), ts2 = to.style();
 
                 if (fs.background != TesseraStyle.UNSET || ts2.background != TesseraStyle.UNSET) {
-                    int f = fs.background != TesseraStyle.UNSET ? fs.background : (bg != 0 ? bg : 0);
+                    int f  = fs.background  != TesseraStyle.UNSET ? fs.background  : (bgSet ? bg : 0);
                     int t2 = ts2.background != TesseraStyle.UNSET ? ts2.background : f;
-                    bg = lerpColor(f, t2, localT);
+                    bg    = lerpColor(f, t2, localT);
+                    bgSet = true;
                 }
                 if (fs.color != TesseraStyle.UNSET || ts2.color != TesseraStyle.UNSET) {
-                    int f = fs.color != TesseraStyle.UNSET ? fs.color : (color != 0 ? color : 0);
+                    int f  = fs.color  != TesseraStyle.UNSET ? fs.color  : (colorSet ? color : 0);
                     int t2 = ts2.color != TesseraStyle.UNSET ? ts2.color : f;
-                    color = lerpColor(f, t2, localT);
+                    color    = lerpColor(f, t2, localT);
+                    colorSet = true;
                 }
                 if (fs.opacity != TesseraStyle.UNSET_F || ts2.opacity != TesseraStyle.UNSET_F) {
-                    float f = fs.opacity != TesseraStyle.UNSET_F ? fs.opacity : (opacity >= 0 ? opacity : 1f);
+                    float f  = fs.opacity  != TesseraStyle.UNSET_F ? fs.opacity  : (opacity >= 0 ? opacity : 1f);
                     float t2 = ts2.opacity != TesseraStyle.UNSET_F ? ts2.opacity : f;
                     opacity = f + (t2 - f) * localT;
                 }
                 if (fs.borderColor != TesseraStyle.UNSET || ts2.borderColor != TesseraStyle.UNSET) {
-                    int f = fs.borderColor != TesseraStyle.UNSET ? fs.borderColor : (border != 0 ? border : 0);
+                    int f  = fs.borderColor  != TesseraStyle.UNSET ? fs.borderColor  : (borderSet ? border : 0);
                     int t2 = ts2.borderColor != TesseraStyle.UNSET ? ts2.borderColor : f;
-                    border = lerpColor(f, t2, localT);
+                    border    = lerpColor(f, t2, localT);
+                    borderSet = true;
                 }
             }
+            kfList.removeIf(ks -> ks.isExpired(now));
         }
 
-        if (bg == 0 && color == 0 && opacity < 0 && border == 0) return TesseraAnimatedValues.NONE;
-        return new TesseraAnimatedValues(bg, color, opacity, border);
+        if (!bgSet && !colorSet && opacity < 0 && !borderSet) return TesseraAnimatedValues.NONE;
+        int mask = (bgSet     ? TesseraAnimatedValues.BG_BIT     : 0)
+                 | (colorSet  ? TesseraAnimatedValues.COLOR_BIT  : 0)
+                 | (borderSet ? TesseraAnimatedValues.BORDER_BIT : 0);
+        return new TesseraAnimatedValues(bg, color, opacity, border, mask);
     }
 
     // ── Internal helpers ───────────────────────────────────────────────────────
@@ -195,9 +202,9 @@ public final class TesseraAnimationEngine {
         list.add(new TransitionState(prop, from, to, startNs, def));
     }
 
-    /** Returns {@code value} if it is not UNSET (0 or MIN_VALUE), otherwise {@code fallback}. */
+    /** Returns {@code value} if it is not UNSET (Integer.MIN_VALUE), otherwise {@code fallback}. */
     private static int valueOr(int value, int fallback) {
-        return (value != 0 && value != TesseraStyle.UNSET) ? value : fallback;
+        return value != TesseraStyle.UNSET ? value : fallback;
     }
 
     private static String normalise(String p) {
@@ -247,7 +254,10 @@ public final class TesseraAnimationEngine {
             return def.easing().apply(Math.min(1f, (float) elapsed / durationNs));
         }
 
-        boolean isExpired() { return false; } // transitions stay until replaced
+        boolean isExpired(long nowNs) {
+            // startNs already includes the delay (added in the constructor).
+            return nowNs - startNs > (long) def.durationMs() * 1_000_000L;
+        }
     }
 
     private static final class KeyframeState {
@@ -279,9 +289,9 @@ public final class TesseraAnimationEngine {
             return iterProgress;
         }
 
-        boolean isExpired() {
+        boolean isExpired(long nowNs) {
             if (def.iterationCount() < 0) return false; // infinite
-            long elapsed = System.nanoTime() - startNs;
+            long elapsed = nowNs - startNs;
             long total   = (long) def.durationMs() * 1_000_000L * def.iterationCount();
             return elapsed > total;
         }

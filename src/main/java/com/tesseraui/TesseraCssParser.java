@@ -351,8 +351,8 @@ public final class TesseraCssParser {
             case "--arca-corner-dots" -> applyCornerDots(s, value);
 
             case "margin-top" -> {
-                if ("auto".equals(value.trim())) { s.marginTopAuto = true;  s.marginTop = TesseraStyle.UNSET; }
-                else                             { s.marginTop = parseLength(value); s.marginTopAuto = false; }
+                if ("auto".equals(value.trim())) { s.marginTopAuto = true;  s.marginTopAutoSet = true; s.marginTop = TesseraStyle.UNSET; }
+                else                             { s.marginTop = parseLength(value); s.marginTopAuto = false; s.marginTopAutoSet = true; }
             }
             case "transition" -> {
                 // Supports: "prop duration [easing] [delay], prop2 duration2 ..."
@@ -560,7 +560,8 @@ public final class TesseraCssParser {
                 int r = clamp(parseInt(parts[0]));
                 int g = clamp(parseInt(parts[1]));
                 int b = clamp(parseInt(parts[2]));
-                int a = (int) (Float.parseFloat(parts[3].trim()) * 255) & 0xFF;
+                float alphaF = Float.parseFloat(parts[3].trim());
+                int a = (int)(Math.min(1f, Math.max(0f, alphaF)) * 255);
                 return (a << 24) | (r << 16) | (g << 8) | b;
             }
         }
@@ -700,6 +701,6 @@ public final class TesseraCssParser {
     }
 
     private static String stripComments(String css) {
-        return css.replaceAll("/\\*.*?\\*/", " ");
+        return css.replaceAll("(?s)/\\*.*?\\*/", " ");
     }
 }

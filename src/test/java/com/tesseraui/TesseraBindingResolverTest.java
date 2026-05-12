@@ -211,4 +211,131 @@ class TesseraBindingResolverTest {
         assertEquals("loc:ui.no",
                 TesseraBindingResolver.resolve("{{ x == 1 ? t:ui.yes : t:ui.no }}", m));
     }
+
+    // ── evaluateCondition — bare expressions (v-if / v-show) ─────────────────
+
+    @Test
+    void evaluateCondition_bareGreaterThan_true() {
+        TesseraModel m = model(Map.of("count", "5"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("count > 0", m));
+    }
+
+    @Test
+    void evaluateCondition_bareGreaterThan_false() {
+        TesseraModel m = model(Map.of("count", "0"));
+        assertFalse(TesseraBindingResolver.evaluateCondition("count > 0", m));
+    }
+
+    @Test
+    void evaluateCondition_bareLessThan_true() {
+        TesseraModel m = model(Map.of("hp", "3"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("hp < 10", m));
+    }
+
+    @Test
+    void evaluateCondition_truthy_trueValue() {
+        TesseraModel m = model(Map.of("visible", "true"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("visible", m));
+    }
+
+    @Test
+    void evaluateCondition_truthy_falseValue() {
+        TesseraModel m = model(Map.of("visible", "false"));
+        assertFalse(TesseraBindingResolver.evaluateCondition("visible", m));
+    }
+
+    // ── evaluateCondition — string equality ───────────────────────────────────
+
+    @Test
+    void evaluateCondition_stringEq_singleQuotes_matches() {
+        TesseraModel m = model(Map.of("status", "ready"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("status == 'ready'", m));
+    }
+
+    @Test
+    void evaluateCondition_stringEq_singleQuotes_noMatch() {
+        TesseraModel m = model(Map.of("status", "idle"));
+        assertFalse(TesseraBindingResolver.evaluateCondition("status == 'ready'", m));
+    }
+
+    @Test
+    void evaluateCondition_stringEq_doubleQuotes_matches() {
+        TesseraModel m = model(Map.of("mode", "dark"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("mode == \"dark\"", m));
+    }
+
+    @Test
+    void evaluateCondition_stringNeq_matches() {
+        TesseraModel m = model(Map.of("state", "active"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("state != 'idle'", m));
+    }
+
+    @Test
+    void evaluateCondition_numericStrings_notTreatedAsString() {
+        // Both sides numeric: should use numeric comparison (5 == 5 → true)
+        TesseraModel m = model(Map.of("x", "5"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("x == 5", m));
+    }
+
+    // ── evaluateCondition — RHS from model ───────────────────────────────────
+
+    @Test
+    void evaluateCondition_twoModelKeys_equal_true() {
+        TesseraModel m = model(Map.of("a", "hello", "b", "hello"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("a == b", m));
+    }
+
+    @Test
+    void evaluateCondition_twoModelKeys_equal_false() {
+        TesseraModel m = model(Map.of("a", "hello", "b", "world"));
+        assertFalse(TesseraBindingResolver.evaluateCondition("a == b", m));
+    }
+
+    @Test
+    void evaluateCondition_twoModelKeys_notEqual_true() {
+        TesseraModel m = model(Map.of("a", "foo", "b", "bar"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("a != b", m));
+    }
+
+    @Test
+    void evaluateCondition_twoNumericModelKeys_greaterThan_true() {
+        TesseraModel m = model(Map.of("hp", "10", "maxHp", "5"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("hp > maxHp", m));
+    }
+
+    @Test
+    void evaluateCondition_twoNumericModelKeys_greaterThan_false() {
+        TesseraModel m = model(Map.of("hp", "3", "maxHp", "10"));
+        assertFalse(TesseraBindingResolver.evaluateCondition("hp > maxHp", m));
+    }
+
+    // ── evaluateCondition — quote-aware operator detection ────────────────────
+
+    @Test
+    void evaluateCondition_operatorInsideQuotedLiteral_notSplit() {
+        // 'a > b' is a string literal — the > must not be treated as an operator
+        TesseraModel m = model(Map.of("status", "a > b"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("status == 'a > b'", m));
+    }
+
+    @Test
+    void evaluateCondition_operatorInsideDoubleQuotedLiteral_notSplit() {
+        TesseraModel m = model(Map.of("label", "x != y"));
+        assertTrue(TesseraBindingResolver.evaluateCondition("label == \"x != y\"", m));
+    }
+
+    // ── evaluateCondition — missing key behaviour ─────────────────────────────
+
+    @Test
+    void evaluateCondition_missingKey_equalsZero_false() {
+        // missing key resolves to null → treated as "" → "0" != "" → false (no silent 0==0 collapse)
+        TesseraModel m = model(Map.of());
+        assertFalse(TesseraBindingResolver.evaluateCondition("missing == 0", m));
+    }
+
+    @Test
+    void evaluateCondition_missingKey_equalsEmptyString_true() {
+        TesseraModel m = model(Map.of());
+        assertTrue(TesseraBindingResolver.evaluateCondition("missing == ''", m));
+    }
 }

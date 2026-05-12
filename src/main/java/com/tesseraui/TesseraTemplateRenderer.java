@@ -296,8 +296,11 @@ public final class TesseraTemplateRenderer {
                 // v-if: evaluated FIRST — if false, emit nothing (no widget created, no layout space)
                 String vIf = child.vIf();
                 if (!vIf.isEmpty()) {
-                    String resolved = TesseraBindingResolver.resolve(vIf, model);
-                    if ("false".equals(resolved) || resolved == null || resolved.isBlank()) {
+                    String expr = vIf.trim();
+                    if (expr.startsWith("{{") && expr.endsWith("}}")) {
+                        expr = expr.substring(2, expr.length() - 2).trim();
+                    }
+                    if (!TesseraBindingResolver.evaluateCondition(expr, model)) {
                         return java.util.stream.Stream.of();
                     }
                 }
@@ -307,8 +310,11 @@ public final class TesseraTemplateRenderer {
                 TesseraNode effectiveChild = child;
                 String vShow = child.vShow();
                 if (!vShow.isEmpty()) {
-                    String resolvedShow = TesseraBindingResolver.resolve(vShow, model);
-                    if ("false".equals(resolvedShow) || resolvedShow == null || resolvedShow.isBlank()) {
+                    String showExpr = vShow.trim();
+                    if (showExpr.startsWith("{{") && showExpr.endsWith("}}")) {
+                        showExpr = showExpr.substring(2, showExpr.length() - 2).trim();
+                    }
+                    if (!TesseraBindingResolver.evaluateCondition(showExpr, model)) {
                         java.util.Map<String, String> newAttrs = new java.util.HashMap<>(child.attrs());
                         newAttrs.put("__vshow-hidden", "true");
                         effectiveChild = new TesseraNode(child.tag(), newAttrs, child.children(), child.text());

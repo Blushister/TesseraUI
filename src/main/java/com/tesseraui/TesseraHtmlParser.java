@@ -202,8 +202,12 @@ public final class TesseraHtmlParser {
         Matcher mHex = ENTITY_HEX.matcher(s);
         StringBuffer sbHex = new StringBuffer();
         while (mHex.find()) {
-            int codePoint = Integer.parseInt(mHex.group(1), 16);
-            mHex.appendReplacement(sbHex, Matcher.quoteReplacement(new String(Character.toChars(codePoint))));
+            try {
+                int codePoint = Integer.parseInt(mHex.group(1), 16);
+                mHex.appendReplacement(sbHex, Matcher.quoteReplacement(new String(Character.toChars(codePoint))));
+            } catch (IllegalArgumentException ignored) {
+                mHex.appendReplacement(sbHex, Matcher.quoteReplacement(mHex.group()));
+            }
         }
         mHex.appendTail(sbHex);
         s = sbHex.toString();
@@ -212,8 +216,12 @@ public final class TesseraHtmlParser {
         Matcher mDec = ENTITY_DEC.matcher(s);
         StringBuffer sbDec = new StringBuffer();
         while (mDec.find()) {
-            int codePoint = Integer.parseInt(mDec.group(1), 10);
-            mDec.appendReplacement(sbDec, Matcher.quoteReplacement(new String(Character.toChars(codePoint))));
+            try {
+                int codePoint = Integer.parseInt(mDec.group(1), 10);
+                mDec.appendReplacement(sbDec, Matcher.quoteReplacement(new String(Character.toChars(codePoint))));
+            } catch (IllegalArgumentException ignored) {
+                mDec.appendReplacement(sbDec, Matcher.quoteReplacement(mDec.group()));
+            }
         }
         mDec.appendTail(sbDec);
         return sbDec.toString();
