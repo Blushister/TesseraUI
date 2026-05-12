@@ -35,3 +35,6 @@ logs/
 *.md
 !README.md
 
+
+# Local dev documents
+docs/
