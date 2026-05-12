@@ -33,7 +33,9 @@ public final class TesseraNode {
         // Media
         "img",
         // Component system
-        "slot", "template"
+        "slot", "template",
+        // V19+ feature tags
+        "tabs", "tab", "virtual-list", "item-slot"
     );
 
     private final String tag;
