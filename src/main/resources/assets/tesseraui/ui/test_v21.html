@@ -9,52 +9,24 @@
   </col>
 </template>
 
-<col class="root">
+<row class="cards-row">
 
-  <row class="toolbar">
-    <label class="title">TesseraUI v2.1 — ContextMenu + Components + Debug</label>
-    <button class="btn-debug" onclick="toggleDebug">[D] Debug</button>
-  </row>
+  <card class="card" onclick="noop">
+    <h3 slot="title">Carte Alpha</h3>
+    <p>Contenu de la carte Alpha.</p>
+    <p>Clic droit pour options.</p>
+  </card>
 
-  <row class="cards-row">
+  <card class="card" onclick="noop">
+    <h3 slot="title">Carte Beta</h3>
+    <p>Contenu de la carte Beta.</p>
+    <p>Clic droit pour options.</p>
+  </card>
 
-    <card class="card-item" onclick="noop">
-      <h3 slot="title">Carte Alpha</h3>
-      <p>Contenu de la carte Alpha.</p>
-      <p>Clic droit pour options.</p>
-    </card>
+  <card class="card" onclick="noop">
+    <h3 slot="title">Carte Gamma</h3>
+    <p>Contenu de la carte Gamma.</p>
+    <p>Clic droit pour options.</p>
+  </card>
 
-    <card class="card-item" onclick="noop">
-      <h3 slot="title">Carte Beta</h3>
-      <p>Contenu de la carte Beta.</p>
-      <p>Clic droit pour options.</p>
-    </card>
-
-    <card class="card-item" onclick="noop">
-      <h3 slot="title">Carte Gamma</h3>
-      <p>Contenu de la carte Gamma.</p>
-      <p>Clic droit pour options.</p>
-    </card>
-
-  </row>
-
-  <col class="nested-demo">
-    <label class="sec-title">Widgets imbriques — debug overlay</label>
-    <col class="nest-l0">
-      <row class="nest-l1">
-        <col class="nest-l2">
-          <label class="nest-label">Profondeur 2</label>
-          <div class="nest-l3">
-            <label class="nest-label">Profondeur 3+</label>
-          </div>
-        </col>
-        <col class="nest-l2">
-          <label class="nest-label">Autre branche</label>
-        </col>
-      </row>
-    </col>
-  </col>
-
-  <label class="hint">Appuyez I pour basculer l'overlay debug. Clic droit sur les cartes.</label>
-
-</col>
+</row>
