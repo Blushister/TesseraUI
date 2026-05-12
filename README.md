@@ -15,24 +15,53 @@ Everything that's painful to build in NeoForge GUI (flexbox layout, hover transi
 
 ## Installation
 
+### Via GitHub Packages
+
 `build.gradle`:
+```groovy
+repositories {
+    maven {
+        url 'https://maven.pkg.github.com/Blushister/TesseraUI'
+        credentials {
+            username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
+            password = project.findProperty('gpr.key')  ?: System.getenv('GITHUB_TOKEN')
+        }
+    }
+}
+
+dependencies {
+    implementation "com.tesseraui:tesseraui:1.0.0"
+}
+```
+
+Add your GitHub token to `~/.gradle/gradle.properties`:
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
+> A read-only token with `read:packages` scope is enough. Generate one at [github.com/settings/tokens](https://github.com/settings/tokens).
+
+### Via CurseForge Maven *(coming soon)*
+
 ```groovy
 repositories {
     maven { url "https://cursemaven.com" }
 }
 dependencies {
-    implementation fg.deobf("curse.maven:tesseraui-<project-id>:latest")
+    implementation fg.deobf("curse.maven:tesseraui-<file-id>:latest")
 }
 ```
 
-`neoforge.mods.toml`:
+### `neoforge.mods.toml`
+
 ```toml
 [[dependencies.yourmod]]
-    modId      = "tesseraui"
-    type       = "required"
+    modId        = "tesseraui"
+    type         = "required"
     versionRange = "[1.0,)"
-    ordering   = "NONE"
-    side       = "CLIENT"
+    ordering     = "NONE"
+    side         = "CLIENT"
 ```
 
 ---

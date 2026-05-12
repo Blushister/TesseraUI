@@ -24,6 +24,10 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+java {
+    withSourcesJar()
+}
+
 runs {
     configureEach {
         systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -77,11 +81,44 @@ publishing {
     publications {
         register('mavenJava', MavenPublication) {
             from components.java
+
+            groupId    = mod_group_id
+            artifactId = mod_id
+            version    = mod_version
+
+            pom {
+                name        = mod_name
+                description = mod_description
+                url         = 'https://github.com/Blushister/TesseraUI'
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License v3.0'
+                        url  = 'https://www.gnu.org/licenses/lgpl-3.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id   = 'blushister'
+                        name = 'Blushister'
+                        url  = 'https://github.com/Blushister'
+                    }
+                }
+                scm {
+                    connection          = 'scm:git:git://github.com/Blushister/TesseraUI.git'
+                    developerConnection = 'scm:git:ssh://github.com/Blushister/TesseraUI.git'
+                    url                 = 'https://github.com/Blushister/TesseraUI'
+                }
+            }
         }
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            name = 'GitHubPackages'
+            url  = 'https://maven.pkg.github.com/Blushister/TesseraUI'
+            credentials {
+                username = project.findProperty('gpr.user') ?: System.getenv('GITHUB_ACTOR')
+                password = project.findProperty('gpr.key')  ?: System.getenv('GITHUB_TOKEN')
+            }
         }
     }
 }
