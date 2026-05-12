@@ -4,7 +4,8 @@ A lightweight HTML + CSS template renderer for NeoForge mods.
 Write your UI in plain HTML and CSS — TesseraUI parses it at runtime and renders native Minecraft widgets.  
 No JavaScript, no browser engine.
 
-**Version 1.1** — NeoForge 1.21.1 · Java 21
+**Version 2.3** — NeoForge 1.21.1 · Java 21  
+[GitHub](https://github.com/Blushister/TesseraUI) · Author: Blushister
 
 ## Requirements
 
@@ -320,6 +321,49 @@ button:disabled { }
 | `opacity` | `0.0` – `1.0` |
 | `corner-dot-size` | px |
 | `corner-dot-color` | color |
+
+**Animations**
+
+| Property | Values |
+|----------|--------|
+| `transition` | `<property> <duration> [<easing>]` — one or more comma-separated |
+| `animation` | `<name> <duration> [<easing>] [<delay>] [<iterations>] [alternate]` |
+
+```css
+/* CSS transition on hover */
+.card {
+  background: #1e2433;
+  border: 1px solid #b87333;
+  transition: background 250ms ease-out, border-color 250ms ease-out;
+}
+.card:hover {
+  background: #2a3450;
+  border-color: #e8a24a;
+}
+
+/* @keyframes animation */
+@keyframes pulse {
+  from { background: #1a2a1a; border-color: #22c55e; }
+  50%  { background: #14532d; border-color: #4ade80; }
+  to   { background: #1a2a1a; border-color: #22c55e; }
+}
+
+.card-live {
+  animation: pulse 1500ms ease-in-out infinite;
+}
+
+.card-flash {
+  animation: flash 800ms ease-in-out infinite alternate;
+}
+
+.card-fadein {
+  animation: fade-in 600ms ease-out 1;   /* 1 = single shot */
+}
+```
+
+Supported easing functions: `linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`.  
+Supported `animation` keywords: `infinite` (loop forever), `alternate` (reverse on odd cycles), integer iteration count.  
+Animated properties: `background`, `border-color`, `opacity`.
 
 **Text**
 
