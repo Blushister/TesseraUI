@@ -4,7 +4,7 @@ A lightweight HTML + CSS template renderer for NeoForge mods.
 Write your UI in plain HTML and CSS — TesseraUI parses it at runtime and renders native Minecraft widgets.  
 No JavaScript, no browser engine.
 
-**Version 1.0** — NeoForge 1.21.1 · Java 21
+**Version 1.1** — NeoForge 1.21.1 · Java 21
 
 ## Requirements
 
@@ -170,6 +170,79 @@ In HTML, use `{{ key }}` for simple interpolation or ternary expressions:
 | `<checkbox id="id">` | Toggle checkbox |
 | `<slider id="id" min="0" max="100">` | Value slider |
 | `<select>` | Dropdown selector |
+
+### Tabs
+
+```html
+<tabs>
+  <tab label="General">
+    <col>…</col>
+  </tab>
+  <tab label="Advanced">
+    <col>…</col>
+  </tab>
+</tabs>
+```
+
+### Item slots
+
+| Tag | Attributes | Description |
+|-----|------------|-------------|
+| `<item-slot>` | `size`, `item="namespace:id"`, `show-count` | Displays a single Minecraft item |
+
+```html
+<row>
+  <item-slot size="24" item="minecraft:diamond" show-count="false"/>
+  <item-slot size="24" item="minecraft:gold_ingot"/>
+</row>
+```
+
+### Templates & slots (component system)
+
+Define reusable components with `<template>` and compose them with named `<slot>` injection points:
+
+```html
+<template name="card">
+  <col class="card">
+    <row class="card-header">
+      <slot name="title"/>
+    </row>
+    <col class="card-body">
+      <slot/>            <!-- default slot -->
+    </col>
+  </col>
+</template>
+
+<row>
+  <card>
+    <h3 slot="title">Alpha</h3>
+    <p>Content goes here.</p>
+  </card>
+  <card>
+    <h3 slot="title">Beta</h3>
+    <p>More content.</p>
+  </card>
+</row>
+```
+
+### Drag & Drop (HTML)
+
+Mark any `<div>` as draggable with `draggable="true"` and a `drag-payload` value. The payload can be dropped onto `TesseraDropZone` targets registered in Java.
+
+```html
+<row>
+  <div class="drag-red"   draggable="true" drag-payload="red">Red</div>
+  <div class="drag-blue"  draggable="true" drag-payload="blue">Blue</div>
+</row>
+```
+
+```java
+dropZone.dropZone(new TesseraDropZone() {
+    @Override public boolean accepts(Object payload) { return payload instanceof String; }
+    @Override public void    onDrop(Object payload)  { /* handle drop */ }
+    @Override public Rect    dropBounds()            { return dropZone.bounds(); }
+});
+```
 
 ### Media & data
 
@@ -423,6 +496,58 @@ panel.add(new TesseraButton(0, 0, 60, 14)
 
 panel.layout();
 ```
+
+### TesseraItemSlot
+
+Displays a single Minecraft item with an optional inventory picker.
+
+```java
+// Display only
+TesseraItemSlot slot = new TesseraItemSlot(0, 0, 32)
+    .item(new ItemStack(Items.DIAMOND));
+
+// Clickable — opens a floating inventory picker overlay
+TesseraItemSlot slot = new TesseraItemSlot(0, 0, 32)
+    .item(new ItemStack(Items.DIAMOND))
+    .inventoryPicker(true);           // click to pick from player inventory
+
+// With a custom callback (e.g. to persist the choice)
+slot.onItemPicked(stack -> {
+    myConfig.setItem(stack);
+    myConfig.save();
+});
+```
+
+When `inventoryPicker(true)` is set and no `onItemPicked` callback is supplied, the picked item simply replaces the slot's current item.
+
+### TesseraItemGrid
+
+A compact drag-and-drop item grid backed by a flat `ItemStack[]`.
+
+```java
+// 4 columns × 2 rows, each slot 22 px
+TesseraItemGrid grid = new TesseraItemGrid(0, 0, 4, 2, 22);
+grid.setItem(0, new ItemStack(Items.DIAMOND));
+grid.setItem(1, new ItemStack(Items.GOLD_INGOT, 3));
+// slots are addressed row-major: index = row * cols + col
+panel.add(grid);
+```
+
+Items can be dragged between slots in the grid out of the box — no extra wiring required.
+
+### TesseraInventoryPicker
+
+A static floating overlay that shows the player's full inventory (main 3×9 + hotbar 1×9). It is opened automatically by `TesseraItemSlot.inventoryPicker(true)` but can also be triggered manually:
+
+```java
+// Open near a custom widget; picker clamps to screen bounds automatically.
+TesseraInventoryPicker.open(anchorX, anchorY, stack -> {
+    // called with a copy of the chosen ItemStack
+    mySlot.item(stack);
+});
+```
+
+Clicking outside the picker panel closes it without picking anything. The picker is rendered by `TesseraScreen.renderTesseraOverlays()` — no extra wiring needed when extending `TesseraScreen`.
 
 ## Color palette
 
