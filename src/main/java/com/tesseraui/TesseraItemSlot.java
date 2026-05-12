@@ -4,6 +4,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.function.Consumer;
+
 /**
  * A single Minecraft item slot widget.
  *
@@ -29,6 +31,11 @@ public final class TesseraItemSlot extends TesseraElement {
     private int  hoverBg      = 0xFF2d3748;   // hover background
     private boolean showCount  = true;
     private Runnable onClick   = null;
+
+    /** When {@code true}, clicking the slot opens the inventory picker overlay. */
+    private boolean pickerEnabled = false;
+    /** Optional callback overriding the default "copy item into slot" behaviour. */
+    private Consumer<ItemStack> onItemPicked = null;
 
     /**
      * Creates a square item slot.
@@ -61,8 +68,29 @@ public final class TesseraItemSlot extends TesseraElement {
     /** Registers a click handler for this slot. */
     public TesseraItemSlot onClick(Runnable r) { this.onClick = r; return this; }
 
+    /**
+     * Enables the inventory picker: clicking this slot opens a floating panel
+     * showing the player's inventory so they can pick an item.
+     * The picked {@link ItemStack} is copied into this slot by default; supply
+     * {@link #onItemPicked(Consumer)} to override that behaviour.
+     */
+    public TesseraItemSlot inventoryPicker(boolean enabled) {
+        this.pickerEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Custom callback invoked when the player picks an item from the inventory
+     * picker.  If not set, the picked stack is simply placed into this slot via
+     * {@link #item(ItemStack)}.
+     */
+    public TesseraItemSlot onItemPicked(Consumer<ItemStack> cb) {
+        this.onItemPicked = cb;
+        return this;
+    }
+
     @Override
-    public boolean hasClickHandler() { return onClick != null; }
+    public boolean hasClickHandler() { return onClick != null || pickerEnabled; }
 
     // ── Rendering ──────────────────────────────────────────────────────────────
 
@@ -121,7 +149,7 @@ public final class TesseraItemSlot extends TesseraElement {
         }
 
         // 5. Hover overlay
-        if (hovered && active && onClick != null) {
+        if (hovered && active && (onClick != null || pickerEnabled)) {
             g.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0x30FFFFFF);
         }
 
@@ -134,9 +162,17 @@ public final class TesseraItemSlot extends TesseraElement {
     @Override
     public boolean mouseClicked(double mx, double my, int btn) {
         if (!active || !visible) return false;
-        if (btn == 0 && isHovered((int) mx, (int) my) && onClick != null) {
-            onClick.run();
-            return true;
+        if (btn == 0 && isHovered((int) mx, (int) my)) {
+            if (pickerEnabled) {
+                Consumer<ItemStack> cb = onItemPicked != null ? onItemPicked : s -> item(s);
+                // Open below the slot; TesseraInventoryPicker clamps to screen bounds.
+                TesseraInventoryPicker.open(x, y + height + 2, cb);
+                return true;
+            }
+            if (onClick != null) {
+                onClick.run();
+                return true;
+            }
         }
         return false;
     }
