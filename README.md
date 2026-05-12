@@ -1,11 +1,12 @@
 # TesseraUI
 
-![Version](https://img.shields.io/badge/version-1.0-B87333?style=flat-square)
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=creativecommons&logoColor=white)
-![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-E07030?style=flat-square)
-![Java](https://img.shields.io/badge/Java-21-5382A1?style=flat-square&logo=openjdk&logoColor=white)
-![License](https://img.shields.io/badge/license-LGPL--3.0-4A90D9?style=flat-square)
-[![Wiki](https://img.shields.io/badge/wiki-read%20the%20docs-805AD5?style=flat-square)](https://github.com/Blushister/TesseraUI/wiki)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft&logoColor=white)](https://www.minecraft.net/)
+[![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-E04E14?style=flat-square)](https://neoforged.net/)
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://adoptium.net/)
+[![License](https://img.shields.io/badge/License-LGPL--2.1-4A90D9?style=flat-square)](LICENSE)
+[![CurseForge](https://img.shields.io/badge/CurseForge-TesseraUI-F16436?style=flat-square&logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/tesseraui)
+[![GitHub Stars](https://img.shields.io/github/stars/Blushister/TesseraUI?style=flat-square&logo=github&color=B87333)](https://github.com/Blushister/TesseraUI)
+[![Wiki](https://img.shields.io/badge/Wiki-read%20the%20docs-805AD5?style=flat-square&logo=gitbook&logoColor=white)](https://github.com/Blushister/TesseraUI/wiki)
 
 Write Minecraft GUI screens in HTML and CSS. TesseraUI parses them at runtime and renders native widgets — no JavaScript, no browser engine.
 
