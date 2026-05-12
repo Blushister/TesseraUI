@@ -19,6 +19,10 @@ public final class TesseraTestScreenV22 extends TesseraScreen {
 
     private TesseraPanel root;
 
+    // Kept alive across rebuilds so item state survives onDrop calls.
+    private TesseraItemGrid grid;
+    private TesseraPanel    slotRow;
+
     // Drop zone states
     private String dropZone1Label = "Drop here (A)";
     private int    dropZone1Bg    = 0xFF1e3a5f;
@@ -31,6 +35,27 @@ public final class TesseraTestScreenV22 extends TesseraScreen {
 
     @Override
     protected void init() {
+        if (grid == null) {
+            grid = new TesseraItemGrid(0, 0, 4, 2, 22);
+            grid.setItem(0, new ItemStack(Items.DIAMOND));
+            grid.setItem(1, new ItemStack(Items.GOLD_INGOT, 3));
+            grid.setItem(2, new ItemStack(Items.IRON_INGOT, 8));
+            grid.setItem(3, new ItemStack(Items.COAL, 12));
+            grid.setItem(4, new ItemStack(Items.EMERALD));
+            grid.setItem(5, new ItemStack(Items.LAPIS_LAZULI, 5));
+        }
+        if (slotRow == null) {
+            slotRow = TesseraPanel.row(0, 0, 0, 34).gap(3); // width set by rebuild()
+            for (ItemStack stack : new ItemStack[]{
+                    new ItemStack(Items.DIAMOND_SWORD),
+                    new ItemStack(Items.BOW),
+                    new ItemStack(Items.BREAD, 16),
+                    new ItemStack(Items.GOLDEN_APPLE),
+                    new ItemStack(Items.ARROW, 64),
+            }) {
+                slotRow.add(new TesseraItemSlot(0, 0, 32).item(stack).inventoryPicker(true));
+            }
+        }
         rebuild();
     }
 
@@ -56,31 +81,14 @@ public final class TesseraTestScreenV22 extends TesseraScreen {
         root.add(new TesseraLabel(0, 0, iW, 9, "[ TesseraItemGrid — grille 4×2, drag entre slots ]")
                 .color(TesseraPalette.COPPER).fontSize(6f));
 
-        TesseraItemGrid grid = new TesseraItemGrid(0, 0, 4, 2, 22);
-        grid.setItem(0, new ItemStack(Items.DIAMOND));
-        grid.setItem(1, new ItemStack(Items.GOLD_INGOT, 3));
-        grid.setItem(2, new ItemStack(Items.IRON_INGOT, 8));
-        grid.setItem(3, new ItemStack(Items.COAL, 12));
-        grid.setItem(4, new ItemStack(Items.EMERALD));
-        grid.setItem(5, new ItemStack(Items.LAPIS_LAZULI, 5));
-        // slots 6, 7 intentionally empty
+        // grid field is initialised once in init() — reused here to survive rebuilds
         root.add(grid);
 
         // ── Section 2 : individual TesseraItemSlot ────────────────────────────
-        root.add(new TesseraLabel(0, 0, iW, 9, "[ TesseraItemSlot — slots individuels 32px ]")
+        root.add(new TesseraLabel(0, 0, iW, 9, "[ TesseraItemSlot — 32px, clic pour choisir depuis l'inventaire ]")
                 .color(TesseraPalette.COPPER).fontSize(6f));
 
-        TesseraPanel slotRow = TesseraPanel.row(0, 0, iW, 34).gap(3);
-        ItemStack[] items = {
-            new ItemStack(Items.DIAMOND_SWORD),
-            new ItemStack(Items.BOW),
-            new ItemStack(Items.BREAD, 16),
-            new ItemStack(Items.GOLDEN_APPLE),
-            new ItemStack(Items.ARROW, 64),
-        };
-        for (ItemStack stack : items) {
-            slotRow.add(new TesseraItemSlot(0, 0, 32).item(stack));
-        }
+        slotRow.setSize(iW, 34); // update width to match current panel size
         root.add(slotRow);
 
         // ── Section 3 : Drag & Drop panels ────────────────────────────────────
@@ -154,14 +162,15 @@ public final class TesseraTestScreenV22 extends TesseraScreen {
         dropRow.add(dropZone1).add(dropZone2);
         root.add(dropRow);
 
-        // ── Section 4 : declarative HTML item-slots ───────────────────────────
-        root.add(new TesseraLabel(0, 0, iW, 9, "[ <item-slot> HTML — attribut item= ]")
-                .color(TesseraPalette.COPPER).fontSize(6f));
-
-        root.add(TesseraTemplateRenderer.build(
+        // ── Section 4 : declarative HTML item-slots + HTML drag panels ──────────
+        // The HTML file itself carries its own section titles — no Java label here.
+        TesseraPanel htmlSection = TesseraTemplateRenderer.build(
                 TesseraTemplate.load("tesseraui:ui/test_v22"),
                 TesseraModel.EMPTY, Map.of(),
-                0, 0, iW, 50));
+                0, 0, iW, 200);
+        int htmlH = htmlSection.fitContentHeight();
+        if (htmlH > 0) { htmlSection.setSize(iW, htmlH); htmlSection.layout(); }
+        root.add(htmlSection);
 
         root.layout();
     }
@@ -175,8 +184,8 @@ public final class TesseraTestScreenV22 extends TesseraScreen {
     public void render(GuiGraphics g, int mx, int my, float delta) {
         renderBackground(g, mx, my, delta);
         if (root != null) root.render(g, mx, my);
-        // Drag ghost rendered on top of everything else
         TesseraDragContext.render(g);
+        renderTesseraOverlays(g, mx, my); // renders inventory picker + debug overlay
         super.render(g, mx, my, delta);
     }
 
