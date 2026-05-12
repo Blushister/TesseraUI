@@ -9,6 +9,8 @@ public class TesseraButton extends TesseraElement {
     private String label;
     private String textAlign = "center";
     private int bgColor = 0;
+    private int hoverBgColor = 0;
+    private boolean hoverBgColorSet = false;
     private int labelColor = 0;
     private String fontFamily = null;
     private float fontSize = 7f;
@@ -24,6 +26,7 @@ public class TesseraButton extends TesseraElement {
     public TesseraButton label(String label) { this.label = label; return this; }
     public TesseraButton textAlign(String align) { this.textAlign = align; return this; }
     public TesseraButton bgColor(int color) { this.bgColor = color; return this; }
+    public TesseraButton hoverBgColor(int color) { this.hoverBgColor = color; this.hoverBgColorSet = true; return this; }
     public TesseraButton labelColor(int color) { this.labelColor = color; return this; }
     public TesseraButton font(String fontFamily) { this.fontFamily = fontFamily; return this; }
     public TesseraButton fontSize(float px) { if (px > 0) this.fontSize = px; return this; }
@@ -38,7 +41,8 @@ public class TesseraButton extends TesseraElement {
 
     @Override
     public void render(GuiGraphics g, int mx, int my) {
-        int bg = bgColor != 0 ? bgColor : TesseraPalette.BG2;
+        boolean hov = active && isHovered(mx, my);
+        int bg = (hoverBgColorSet && hov) ? hoverBgColor : (bgColor != 0 ? bgColor : TesseraPalette.BG2);
         g.fill(x, y, x + width, y + height, bg);
         renderStateOverlays(g, mx, my);
 
@@ -47,7 +51,6 @@ public class TesseraButton extends TesseraElement {
             String displayed = TesseraTextStyling.transform(label, textTransform);
             var comp = TesseraFonts.component(displayed, fontFamily, fontWeight);
             float scale = fontSize / TesseraFonts.naturalPx(fontFamily);
-            boolean hov = active && isHovered(mx, my);
             int textColor = !active ? TesseraPalette.CREAM_DIM
                           : labelColor != 0 ? (hov ? brighten(labelColor) : labelColor)
                           : (hov ? 0xFFFFFFFF : TesseraPalette.CREAM);

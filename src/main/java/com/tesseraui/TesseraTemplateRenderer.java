@@ -661,6 +661,9 @@ public final class TesseraTemplateRenderer {
                 if (style.fontFamily != null)             btn.font(style.fontFamily);
                 btn.fontSize(fontSizePx).fontWeight(fontWeight).opacity(opacityVal);
                 if (style.textTransform != null)          btn.textTransform(style.textTransform);
+                // Apply CSS :hover background (if defined)
+                TesseraStyle btnHoverStyle = sheet.resolveHover(node, ancestors);
+                if (btnHoverStyle.background != TesseraStyle.UNSET) btn.hoverBgColor(btnHoverStyle.background);
                 String handler = node.onClickHandler();
                 if (!handler.isEmpty() && handlers.containsKey(handler))
                     btn.onClick(handlers.get(handler));
