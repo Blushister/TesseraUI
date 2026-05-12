@@ -101,6 +101,15 @@ public class TesseraPanel implements TesseraWidget {
     /** Original color of direct label/button children — captured on first hover-in, used to restore on hover-out. */
     private int     baseChildrenColor    = 0;
 
+    // ── CSS Animation engine (v2.3) ───────────────────────────────────────────
+    private List<TesseraTransitionDef> cssTransitions = null;
+    private TesseraStyle               cssBaseStyle   = null;
+    private TesseraStyle               cssHoverStyle  = null;
+    private List<TesseraAnimationDef>  cssAnimDefs    = null;
+    private TesseraStyleSheet          cssSheet       = null;
+    private boolean                    cssWasHovered  = false;
+    private boolean                    cssAnimsStarted = false;
+
     // ── Drag & Drop ────────────────────────────────────────────────────────────
     private boolean         draggable        = false;
     private Object          dragPayload      = null;
@@ -286,6 +295,21 @@ public class TesseraPanel implements TesseraWidget {
     public TesseraPanel hoverColor(int color) {
         this.hoverTextColor    = color;
         this.hoverTextColorSet = true;
+        return this;
+    }
+
+    /** Wires CSS multi-property transitions for hover state changes. */
+    public TesseraPanel cssTransitions(List<TesseraTransitionDef> defs, TesseraStyle base, TesseraStyle hover) {
+        this.cssTransitions = defs;
+        this.cssBaseStyle   = base;
+        this.cssHoverStyle  = hover;
+        return this;
+    }
+
+    /** Wires CSS @keyframes animations (started once on first render). */
+    public TesseraPanel cssAnimation(List<TesseraAnimationDef> defs, TesseraStyleSheet sheet) {
+        this.cssAnimDefs = defs;
+        this.cssSheet    = sheet;
         return this;
     }
 
@@ -745,6 +769,25 @@ public class TesseraPanel implements TesseraWidget {
             bColor   = (hovered && hoverBorderColorSet) ? hoverBorderColor : borderColor;
             effectiveOpacity = (hovered && hoverOpacity >= 0f) ? hoverOpacity : opacity;
         }
+        // ── CSS Animation Engine (v2.3) ───────────────────────────────────────
+        if (!cssAnimsStarted && cssAnimDefs != null && cssSheet != null) {
+            for (TesseraAnimationDef def : cssAnimDefs) {
+                TesseraKeyframes kf = cssSheet.getKeyframes(def.name());
+                if (kf != null) TesseraAnimationEngine.startKeyframeAnimation(this, kf, def);
+            }
+            cssAnimsStarted = true;
+        }
+        if (cssTransitions != null && cssBaseStyle != null && hovered != cssWasHovered) {
+            TesseraAnimationEngine.onHoverChanged(this, hovered, cssBaseStyle, cssHoverStyle, cssTransitions);
+            cssWasHovered = hovered;
+        }
+        if (cssTransitions != null || cssAnimDefs != null) {
+            TesseraAnimatedValues anim = TesseraAnimationEngine.getValues(this);
+            if (anim.hasBackground())  bg               = anim.background();
+            if (anim.hasBorderColor()) bColor           = anim.borderColor();
+            if (anim.hasOpacity())     effectiveOpacity = anim.opacity();
+        }
+
         int bTop    = (hovered && hoverBorderTopColor    != 0) ? hoverBorderTopColor    : borderTopColor;
         int bBottom = (hovered && hoverBorderBottomColor != 0) ? hoverBorderBottomColor : borderBottomColor;
         int bLeft   = (hovered && hoverBorderLeftColor   != 0) ? hoverBorderLeftColor   : borderLeftColor;

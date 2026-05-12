@@ -153,6 +153,13 @@ public final class TesseraDevCommand {
                         return 1;
                     })
                 )
+                .then(Commands.literal("test-v23")
+                    .executes(ctx -> {
+                        Minecraft.getInstance().execute(
+                            () -> Minecraft.getInstance().setScreen(new TesseraTestScreenV23()));
+                        return 1;
+                    })
+                )
         );
     }
 }

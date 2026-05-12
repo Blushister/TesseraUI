@@ -18,6 +18,11 @@ public final class TesseraCssParser {
     private static final Pattern ROOT_BLOCK  = Pattern.compile(":root\\s*\\{([^}]*)\\}", Pattern.DOTALL);
     private static final Pattern MEDIA_COND  = Pattern.compile("\\(\\s*(min|max)-width\\s*:\\s*(\\d+)(?:px)?\\s*\\)");
     private static final Pattern INT_PREFIX  = Pattern.compile("^(-?\\d+)");
+    private static final Pattern KF_BLOCK    = Pattern.compile(
+            "@keyframes\\s+(\\w+)\\s*\\{([^{}]*(?:\\{[^}]*\\}[^{}]*)*)\\}",
+            Pattern.DOTALL);
+    private static final Pattern KF_STOP     = Pattern.compile(
+            "(from|to|\\d+%)\\s*\\{([^}]*)\\}", Pattern.DOTALL);
 
     private static final Map<String, Integer> NAMED_COLORS = new HashMap<>();
     static {
@@ -69,7 +74,40 @@ public final class TesseraCssParser {
         processed = extractMediaBlocks(processed, mediaBlocks, orderRef);
         int order = orderRef[0];
 
-        // ── Step 2: strip remaining at-rules (@keyframes, @supports, @font-face, …) ─
+        // ── Step 1b: extract and parse @keyframes blocks ─────────────────────────
+        List<TesseraKeyframes> keyframesList = new ArrayList<>();
+        Matcher kfMatcher = KF_BLOCK.matcher(processed);
+        while (kfMatcher.find()) {
+            String kfName = kfMatcher.group(1);
+            String kfBody = kfMatcher.group(2);
+            List<TesseraKeyframes.Stop> stops = new ArrayList<>();
+            Matcher stopMatcher = KF_STOP.matcher(kfBody);
+            while (stopMatcher.find()) {
+                String progressStr = stopMatcher.group(1).trim().toLowerCase(java.util.Locale.ROOT);
+                float progress = switch (progressStr) {
+                    case "from" -> 0f;
+                    case "to"   -> 1f;
+                    default     -> Float.parseFloat(progressStr.replace("%", "")) / 100f;
+                };
+                TesseraStyle stopStyle = new TesseraStyle();
+                String stopBody = stopMatcher.group(2);
+                for (String decl : stopBody.split(";")) {
+                    String[] kv = decl.split(":", 2);
+                    if (kv.length == 2) {
+                        try { applyProp(stopStyle, kv[0].trim().toLowerCase(java.util.Locale.ROOT), kv[1].trim()); }
+                        catch (Exception ignored) {}
+                    }
+                }
+                stops.add(new TesseraKeyframes.Stop(progress, stopStyle));
+            }
+            if (!stops.isEmpty()) {
+                keyframesList.add(new TesseraKeyframes(kfName, stops));
+            }
+        }
+        // Strip @keyframes blocks before normal rule processing
+        processed = KF_BLOCK.matcher(processed).replaceAll("");
+
+        // ── Step 2: strip remaining at-rules (@supports, @font-face, …) ──────────
         // Remove block at-rules (potentially with nested braces one level deep)
         processed = processed.replaceAll("@[^;{]+\\{[^{}]*(?:\\{[^{}]*\\}[^{}]*)*\\}", "");
         // Remove single-line at-rules (@charset, @import)
@@ -104,7 +142,11 @@ public final class TesseraCssParser {
                 }
             }
         }
-        return new TesseraStyleSheet(base, hover, active, disabled, focus, mediaBlocks);
+        TesseraStyleSheet sheet = new TesseraStyleSheet(base, hover, active, disabled, focus, mediaBlocks);
+        for (TesseraKeyframes kf : keyframesList) {
+            sheet.registerKeyframes(kf);
+        }
+        return sheet;
     }
 
     /**
@@ -312,35 +354,50 @@ public final class TesseraCssParser {
                 if ("auto".equals(value.trim())) { s.marginTopAuto = true;  s.marginTop = TesseraStyle.UNSET; }
                 else                             { s.marginTop = parseLength(value); s.marginTopAuto = false; }
             }
-            case "transition" -> parseTransition(s, value);
-        }
-    }
-
-    private static void parseTransition(TesseraStyle s, String value) {
-        // Supporte "background 200ms" ou "all 200ms ease" ; ignore easing
-        // Pour la virgule (multi-prop), prend le premier token de propriété et le max des durées
-        int maxDuration = 0;
-        String firstProp = null;
-        for (String part : value.split(",")) {
-            part = part.trim().toLowerCase(java.util.Locale.ROOT);
-            String[] tokens = part.split("\\s+");
-            String prop = tokens[0];
-            int durationMs = 0;
-            for (int i = 1; i < tokens.length; i++) {
-                String t = tokens[i];
-                if (t.endsWith("ms")) {
-                    try { durationMs = Integer.parseInt(t.substring(0, t.length() - 2)); } catch (NumberFormatException ignored) {}
-                } else if (t.endsWith("s") && !t.endsWith("ms")) {
-                    try { durationMs = (int)(Float.parseFloat(t.substring(0, t.length() - 1)) * 1000); } catch (NumberFormatException ignored) {}
+            case "transition" -> {
+                // Supports: "prop duration [easing] [delay], prop2 duration2 ..."
+                List<TesseraTransitionDef> defs = new ArrayList<>();
+                for (String entry : value.split(",")) {
+                    String[] parts = entry.trim().split("\\s+");
+                    if (parts.length < 2) continue;
+                    String property  = parts[0];
+                    int    duration  = parseMs(parts[1]);
+                    TesseraEasing easing = parts.length >= 3 ? TesseraEasing.parse(parts[2]) : TesseraEasing.EASE;
+                    int    delay     = parts.length >= 4 ? parseMs(parts[3]) : 0;
+                    defs.add(TesseraTransitionDef.of(property, duration, easing, delay));
+                }
+                if (!defs.isEmpty()) s.transitions = defs;
+                // Also maintain legacy fields for backward compatibility
+                if (!defs.isEmpty()) {
+                    s.transitionDurationMs = defs.get(0).durationMs();
+                    s.transitionProperty   = defs.get(0).property();
                 }
             }
-            if (firstProp == null) firstProp = prop;
-            else if (!firstProp.equals(prop)) firstProp = "all"; // mixed → all
-            if (durationMs > maxDuration) maxDuration = durationMs;
-        }
-        if (maxDuration > 0) {
-            s.transitionDurationMs = maxDuration;
-            s.transitionProperty   = firstProp != null ? firstProp : "all";
+            case "animation" -> {
+                // Supports: "name duration [easing] [delay] [iteration-count] [direction]"
+                List<TesseraAnimationDef> defs = new ArrayList<>();
+                for (String entry : value.split(",")) {
+                    String[] parts = entry.trim().split("\\s+");
+                    if (parts.length < 2) continue;
+                    String name       = parts[0];
+                    int    duration   = parseMs(parts[1]);
+                    TesseraEasing easing    = TesseraEasing.EASE;
+                    int    delay      = 0;
+                    int    iterations = 1;
+                    boolean alternate = false;
+                    for (int i = 2; i < parts.length; i++) {
+                        String p = parts[i].toLowerCase(java.util.Locale.ROOT);
+                        if (p.equals("infinite"))    { iterations = -1; continue; }
+                        if (p.equals("alternate"))   { alternate = true; continue; }
+                        if (p.matches("\\d+"))       { iterations = Integer.parseInt(p); continue; }
+                        if (p.endsWith("ms") || p.endsWith("s")) { delay = parseMs(p); continue; }
+                        TesseraEasing e = TesseraEasing.parse(p);
+                        if (e != TesseraEasing.EASE || p.equals("ease")) easing = e;
+                    }
+                    defs.add(TesseraAnimationDef.of(name, duration, easing, delay, iterations, alternate));
+                }
+                if (!defs.isEmpty()) s.animations = defs;
+            }
         }
     }
 
@@ -630,6 +687,16 @@ public final class TesseraCssParser {
         String v = value.trim().replaceAll("[^0-9.\\-]", "");
         try { return Float.parseFloat(v); }
         catch (NumberFormatException e) { return 0f; }
+    }
+
+    private static int parseMs(String s) {
+        if (s == null || s.isBlank()) return 0;
+        s = s.trim().toLowerCase(java.util.Locale.ROOT);
+        try {
+            if (s.endsWith("ms")) return Integer.parseInt(s.replace("ms", "").trim());
+            if (s.endsWith("s"))  return (int)(Double.parseDouble(s.replace("s", "").trim()) * 1000);
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) { return 0; }
     }
 
     private static String stripComments(String css) {

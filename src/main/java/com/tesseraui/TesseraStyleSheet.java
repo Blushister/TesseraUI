@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public final class TesseraStyleSheet {
     private final List<Rule> disabled;
     private final List<Rule> focus;
     private final List<MediaBlock> mediaBlocks;
+    private Map<String, TesseraKeyframes> keyframeRegistry = new HashMap<>();
 
     TesseraStyleSheet(List<Rule> base, List<Rule> hover, List<Rule> active, List<Rule> disabled) {
         this(base, hover, active, disabled, List.of());
@@ -172,7 +174,9 @@ public final class TesseraStyleSheet {
             }
         }
         // Note: forViewport result has no mediaBlocks (already resolved) — intentional.
-        return new TesseraStyleSheet(newBase, newHover, newActive, newDisabled, newFocus);
+        TesseraStyleSheet result = new TesseraStyleSheet(newBase, newHover, newActive, newDisabled, newFocus);
+        result.keyframeRegistry = this.keyframeRegistry;
+        return result;
     }
 
     private static TesseraStyle matchAndFold(List<Rule> rules, TesseraNode node, Deque<TesseraNode> ancestors) {
@@ -191,5 +195,15 @@ public final class TesseraStyleSheet {
         TesseraStyle result = new TesseraStyle();
         for (Rule r : matched) result = result.merge(r.style());
         return result;
+    }
+
+    /** Registers a parsed {@code @keyframes} block. */
+    public void registerKeyframes(TesseraKeyframes keyframes) {
+        keyframeRegistry.put(keyframes.name(), keyframes);
+    }
+
+    /** Returns the keyframes with the given name, or {@code null} if not found. */
+    public TesseraKeyframes getKeyframes(String name) {
+        return keyframeRegistry.get(name);
     }
 }

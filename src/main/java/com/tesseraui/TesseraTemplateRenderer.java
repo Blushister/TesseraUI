@@ -160,6 +160,12 @@ public final class TesseraTemplateRenderer {
         if (style.transitionDurationMs > 0)
             panel.transition(style.transitionDurationMs, style.transitionProperty != null ? style.transitionProperty : "all");
 
+        // CSS multi-property transitions and @keyframes animations (v2.3)
+        if (style.transitions != null)
+            panel.cssTransitions(style.transitions, style, hoverStyle);
+        if (style.animations != null)
+            panel.cssAnimation(style.animations, sheet);
+
         if (style.cornerDotSize != TesseraStyle.UNSET && style.cornerDotSize > 0) {
             int dotColor = style.cornerDotColor != TesseraStyle.UNSET ? style.cornerDotColor
                          : style.borderColor != TesseraStyle.UNSET ? style.borderColor : COPPER_LO;

@@ -1,0 +1,77 @@
+/* TesseraUI v2.3 - CSS Animations test */
+
+:root {
+    --bg-card: #1e2433;
+    --bg-hover: #2a3450;
+    --copper: #b87333;
+    --copper-hi: #e8a24a;
+    --cream-dim: #a09880;
+}
+
+.card-transition {
+    background: var(--bg-card);
+    border: 1px solid var(--copper);
+    padding: 6px;
+    flex: 1;
+    min-height: 40px;
+    transition: background 250ms ease-out, border-color 250ms ease-out;
+}
+
+.card-transition:hover {
+    background: var(--bg-hover);
+    border-color: var(--copper-hi);
+}
+
+@keyframes pulse {
+    from { background: #1a2a1a; border-color: #22c55e; }
+    50%  { background: #14532d; border-color: #4ade80; }
+    to   { background: #1a2a1a; border-color: #22c55e; }
+}
+
+.card-pulse {
+    background: #1a2a1a;
+    border: 1px solid #22c55e;
+    padding: 6px;
+    flex: 1;
+    min-height: 40px;
+    animation: pulse 1500ms ease-in-out infinite;
+}
+
+@keyframes flash {
+    from { background: #1e1e3a; border-color: #3b82f6; }
+    50%  { background: #1e3a7a; border-color: #60a5fa; }
+    to   { background: #1e1e3a; border-color: #3b82f6; }
+}
+
+.card-flash {
+    background: #1e1e3a;
+    border: 1px solid #3b82f6;
+    padding: 6px;
+    flex: 1;
+    min-height: 40px;
+    animation: flash 800ms ease-in-out infinite alternate;
+}
+
+@keyframes fade-in {
+    from { background: #3a1a1a; border-color: #ef4444; }
+    to   { background: #1e2433; border-color: #b87333; }
+}
+
+.card-fadein {
+    background: #1e2433;
+    border: 1px solid var(--copper);
+    padding: 6px;
+    flex: 1;
+    min-height: 40px;
+    animation: fade-in 600ms ease-out 1;
+}
+
+.section-title {
+    color: var(--copper);
+    font-size: 6px;
+}
+
+.card-label {
+    color: var(--cream-dim);
+    font-size: 6px;
+}

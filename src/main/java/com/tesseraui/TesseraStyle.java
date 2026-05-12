@@ -1,5 +1,7 @@
 package com.tesseraui;
 
+import java.util.List;
+
 public final class TesseraStyle {
 
     public static final int    UNSET   = Integer.MIN_VALUE;
@@ -108,6 +110,11 @@ public final class TesseraStyle {
     /** CSS {@code transition-property} : "background" | "opacity" | "border-color" | "all" | null. */
     public String transitionProperty    = null;
 
+    /** Parsed {@code transition} declarations; {@code null} if not set. */
+    public List<TesseraTransitionDef> transitions = null;
+    /** Parsed {@code animation} declarations; {@code null} if not set. */
+    public List<TesseraAnimationDef> animations = null;
+
     public TesseraStyle() {}
 
     public int padding() { return paddingTop != UNSET ? paddingTop : UNSET; }
@@ -196,6 +203,11 @@ public final class TesseraStyle {
 
         r.transitionDurationMs = other.transitionDurationMs != 0   ? other.transitionDurationMs  : this.transitionDurationMs;
         r.transitionProperty   = other.transitionProperty   != null ? other.transitionProperty    : this.transitionProperty;
+
+        if (other.transitions != null) r.transitions = other.transitions;
+        else                           r.transitions = this.transitions;
+        if (other.animations  != null) r.animations  = other.animations;
+        else                           r.animations  = this.animations;
 
         return r;
     }
