@@ -113,13 +113,13 @@ public class TesseraPanel implements TesseraWidget {
     private boolean                    cssAnimsStarted = false;
 
     // ── Direct Java API animations (no CSS file required) ────────────────────
-    private List<TesseraKeyframes>     directKeyframes    = null;
-    private List<TesseraAnimationDef>  directAnimDefs     = null;
-    private boolean                    directAnimsStarted = false;
-    private List<TesseraTransitionDef> directTransitions  = null;
-    private TesseraStyle               directBase         = null;
-    private TesseraStyle               directHover        = null;
-    private boolean                    directWasHovered   = false;
+    private List<TesseraKeyframes>     directKeyframes       = null;
+    private List<TesseraAnimationDef>  directAnimDefs        = null;
+    private int                        directAnimsStarted    = 0;   // count, not boolean
+    private List<TesseraTransitionDef> directTransitions     = null;
+    private TesseraStyle               directBase            = null;
+    private TesseraStyle               directHover           = null;
+    private boolean                    directWasHovered      = false;
 
     // ── Drag & Drop ────────────────────────────────────────────────────────────
     private boolean         draggable        = false;
@@ -388,7 +388,7 @@ public class TesseraPanel implements TesseraWidget {
             directBase        = new TesseraStyle();
             directHover       = new TesseraStyle();
         }
-        directTransitions.add(TesseraTransitionDef.of(property, durationMs, easing, 0));
+        boolean recognized = true;
         switch (property.trim().toLowerCase()) {
             case "background", "background-color" -> {
                 directBase.background       = baseColor;
@@ -402,7 +402,9 @@ public class TesseraPanel implements TesseraWidget {
                 directBase.color       = baseColor;
                 directHover.hoverColor = hoverColor;
             }
+            default -> recognized = false;
         }
+        if (recognized) directTransitions.add(TesseraTransitionDef.of(property, durationMs, easing, 0));
         return this;
     }
 
@@ -417,7 +419,8 @@ public class TesseraPanel implements TesseraWidget {
      * }</pre>
      */
     public <T> TesseraPanel addFor(List<T> items, Function<T, TesseraWidget> factory) {
-        for (T item : items) add(factory.apply(item));
+        if (items == null) return this;
+        for (T item : items) if (item != null) add(factory.apply(item));
         return this;
     }
 
@@ -903,19 +906,19 @@ public class TesseraPanel implements TesseraWidget {
             }
             cssAnimsStarted = true;
         }
-        if (!directAnimsStarted && directKeyframes != null) {
-            for (int i = 0; i < directKeyframes.size(); i++) {
+        if (directKeyframes != null && directKeyframes.size() > directAnimsStarted) {
+            for (int i = directAnimsStarted; i < directKeyframes.size(); i++) {
                 TesseraAnimationEngine.startKeyframeAnimation(this, directKeyframes.get(i), directAnimDefs.get(i));
             }
-            directAnimsStarted = true;
+            directAnimsStarted = directKeyframes.size();
         }
         if (cssTransitions != null && cssBaseStyle != null && hovered != cssWasHovered) {
             TesseraAnimationEngine.onHoverChanged(this, hovered, cssBaseStyle, cssHoverStyle, cssTransitions);
             cssWasHovered = hovered;
         }
         if (directTransitions != null && hovered != directWasHovered) {
-            TesseraAnimationEngine.onHoverChanged(this, hovered, directBase, directHover, directTransitions);
             directWasHovered = hovered;
+            TesseraAnimationEngine.onHoverChanged(this, hovered, directBase, directHover, directTransitions);
         }
         if (cssTransitions != null || cssAnimDefs != null || directTransitions != null || directKeyframes != null) {
             TesseraAnimatedValues anim = TesseraAnimationEngine.getValues(this);
