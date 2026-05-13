@@ -157,6 +157,8 @@ public abstract class TesseraScreen extends Screen {
         }
         // Tab / Shift+Tab: keyboard focus traversal
         if (key == GLFW.GLFW_KEY_TAB) {
+            TesseraWidget focusedBeforeTraversal = TesseraFocusManager.focused();
+            if (focusedBeforeTraversal != null && focusedBeforeTraversal.keyPressed(key, scan, mods)) return true;
             boolean shift = (mods & GLFW.GLFW_MOD_SHIFT) != 0;
             if (shift) TesseraFocusManager.focusPrev();
             else       TesseraFocusManager.focusNext();

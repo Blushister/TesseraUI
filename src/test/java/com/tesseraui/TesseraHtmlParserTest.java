@@ -26,6 +26,28 @@ class TesseraHtmlParserTest {
     }
 
     @Test
+    void parse_initialUtf8BomBeforeRoot() {
+        TesseraNode root = TesseraHtmlParser.parse("\uFEFF<div></div>");
+        assertNotNull(root);
+        assertEquals("div", root.tag());
+    }
+
+    @Test
+    void parseFragment_initialUtf8BomBeforeRoot() {
+        TesseraNode root = TesseraHtmlParser.parseFragment("\uFEFF<div></div>");
+        assertNotNull(root);
+        assertEquals("div", root.tag());
+    }
+
+    @Test
+    void parseWithComponents_initialUtf8BomBeforeRoot() {
+        TesseraNode root = TesseraHtmlParser.parseWithComponents("\uFEFF<col><p>x</p></col>");
+        assertNotNull(root);
+        assertEquals("col", root.tag());
+        assertEquals("p", root.children().get(0).tag());
+    }
+
+    @Test
     void parse_selfClosingTag() {
         TesseraNode root = TesseraHtmlParser.parse("<img/>");
         assertNotNull(root);

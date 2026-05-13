@@ -26,7 +26,7 @@ public final class TesseraHtmlParser {
     }
 
     public static TesseraNode parse(String html) {
-        return new TesseraHtmlParser(html.trim()).parseDocument();
+        return new TesseraHtmlParser(normalizeHtml(html)).parseDocument();
     }
 
     public static TesseraNode parse(InputStream is) throws IOException {
@@ -39,7 +39,7 @@ public final class TesseraHtmlParser {
      */
     public static TesseraNode parseFragment(String html) {
         if (html == null || html.isBlank()) return null;
-        TesseraHtmlParser p = new TesseraHtmlParser(html.trim());
+        TesseraHtmlParser p = new TesseraHtmlParser(normalizeHtml(html));
         p.skipWhitespace();
         if (p.peek("<")) return p.parseElement();
         return null;
@@ -50,7 +50,7 @@ public final class TesseraHtmlParser {
      * into the {@link TesseraComponentRegistry}, and returning the first non-template root.
      */
     public static TesseraNode parseWithComponents(String html) {
-        TesseraHtmlParser p = new TesseraHtmlParser(html.trim());
+        TesseraHtmlParser p = new TesseraHtmlParser(normalizeHtml(html));
         p.skipWhitespace();
         while (p.pos < p.src.length() && p.peek("<")
                && (p.peekAt(1) == '?' || p.peekAt(1) == '!')) {
@@ -93,6 +93,14 @@ public final class TesseraHtmlParser {
 
     public static TesseraNode parseWithComponents(InputStream is) throws IOException {
         return parseWithComponents(new String(is.readAllBytes(), StandardCharsets.UTF_8));
+    }
+
+    private static String normalizeHtml(String html) {
+        if (html == null) return "";
+        if (!html.isEmpty() && html.charAt(0) == '\uFEFF') {
+            html = html.substring(1);
+        }
+        return html.trim();
     }
 
     private TesseraNode parseDocument() {

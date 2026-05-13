@@ -37,6 +37,88 @@ class TesseraTemplateRendererStateTest {
     }
 
     @Test
+    void build_inputReadsSuggestionsAttribute() {
+        TesseraTemplate template = TesseraTemplate.fromString(
+                "<col><input id=\"name\" suggestions=\"Alfa, Beta, Gamma\" /></col>",
+                "input { width: 80; height: 14; }");
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+        TesseraInput input = (TesseraInput) root.debugChildren().get(0);
+
+        assertEquals(java.util.List.of("Alfa", "Beta", "Gamma"), input.suggestions());
+        assertTrue(input.autocomplete());
+    }
+
+    @Test
+    void build_inputReadsAutocompleteListAttribute() {
+        TesseraTemplate template = TesseraTemplate.fromString(
+                "<col><input id=\"name\" autocomplete=\"{{ names }}\" /></col>",
+                "input { width: 80; height: 14; }");
+        TesseraModel model = TesseraModel.of(Map.of("names", "Alfa|Beta|Gamma"));
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, model, Map.of(), Map.of(), 0, 0, 120, 40);
+        TesseraInput input = (TesseraInput) root.debugChildren().get(0);
+
+        assertEquals(java.util.List.of("Alfa", "Beta", "Gamma"), input.suggestions());
+        assertTrue(input.autocomplete());
+    }
+
+    @Test
+    void build_inputAutocompleteOffDisablesConfiguredSuggestions() {
+        TesseraTemplate template = TesseraTemplate.fromString(
+                "<col><input id=\"name\" suggestions=\"Alfa,Beta\" autocomplete=\"off\" /></col>",
+                "input { width: 80; height: 14; }");
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+        TesseraInput input = (TesseraInput) root.debugChildren().get(0);
+
+        assertEquals(java.util.List.of("Alfa", "Beta"), input.suggestions());
+        assertFalse(input.autocomplete());
+    }
+
+    @Test
+    void renderContext_clearInput_removesOneState() {
+        TesseraRenderContext context = new TesseraRenderContext();
+        context.inputState("row.1.name").text = "Alice";
+        context.inputState("row.2.name").text = "Bob";
+
+        assertTrue(context.clearInput("row.1.name"));
+        assertFalse(context.clearInput("row.1.name"));
+        assertFalse(context.inputStates().containsKey("row.1.name"));
+        assertEquals("Bob", context.inputState("row.2.name").text);
+    }
+
+    @Test
+    void renderContext_clearInputsWithPrefix_removesDynamicListStates() {
+        TesseraRenderContext context = new TesseraRenderContext();
+        context.inputState("rows.1.name").text = "Alice";
+        context.inputState("rows.1.count").text = "3";
+        context.inputState("rows.2.name").text = "Bob";
+        context.inputState("dialog.title").text = "Edit";
+
+        assertEquals(2, context.clearInputsWithPrefix("rows.1."));
+        assertFalse(context.inputStates().containsKey("rows.1.name"));
+        assertFalse(context.inputStates().containsKey("rows.1.count"));
+        assertTrue(context.inputStates().containsKey("rows.2.name"));
+        assertTrue(context.inputStates().containsKey("dialog.title"));
+    }
+
+    @Test
+    void renderContext_clearInputsMatching_removesPredicateMatches() {
+        TesseraRenderContext context = new TesseraRenderContext();
+        context.inputState("rows.1.name").text = "Alice";
+        context.inputState("rows.1.count").text = "3";
+        context.inputState("rows.2.name").text = "Bob";
+
+        assertEquals(2, context.clearInputsMatching(id -> id.endsWith(".name")));
+        assertEquals(1, context.inputStates().size());
+        assertTrue(context.inputStates().containsKey("rows.1.count"));
+    }
+
+    @Test
     void globalStylesheet_appliesBeforeLocalCss() {
         TesseraTemplate.addGlobalStylesheet(".box { color: #112233; background: #010203; }");
         TesseraTemplate template = TesseraTemplate.fromString(
@@ -63,6 +145,43 @@ class TesseraTemplateRendererStateTest {
                         new java.util.ArrayDeque<>());
 
         assertEquals(0xFF222222, style.color);
+    }
+
+    @Test
+    void build_tooltipI18nOverridesStaticTooltip() {
+        var previous = TesseraI18n.TRANSLATOR;
+        try {
+            TesseraI18n.TRANSLATOR = key -> "translated:" + key;
+            TesseraTemplate template = TesseraTemplate.fromString(
+                    "<col><label tooltip=\"plain\" tooltip-i18n=\"ui.tip\">Hover</label></col>",
+                    "label { width: 80; height: 10; }");
+
+            TesseraPanel root = TesseraTemplateRenderer.build(
+                    template, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+            TesseraLabel label = (TesseraLabel) root.debugChildren().get(0);
+
+            assertEquals("translated:ui.tip", label.getTooltip());
+        } finally {
+            TesseraI18n.TRANSLATOR = previous;
+        }
+    }
+
+    @Test
+    void build_nullTemplate_returnsReadableErrorPanel() throws Exception {
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                null, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+
+        assertEquals("Tessera template is null", labelText((TesseraLabel) root.debugChildren().get(1)));
+    }
+
+    @Test
+    void build_nullTemplateRoot_returnsReadableErrorPanel() throws Exception {
+        TesseraTemplate template = TesseraTemplate.fromString("");
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+
+        assertEquals("Tessera template root is null", labelText((TesseraLabel) root.debugChildren().get(1)));
     }
 
     @Test
@@ -96,5 +215,11 @@ class TesseraTemplateRendererStateTest {
         var textField = TesseraLabel.class.getDeclaredField("text");
         textField.setAccessible(true);
         assertEquals("First row", textField.get(label));
+    }
+
+    private static String labelText(TesseraLabel label) throws Exception {
+        var textField = TesseraLabel.class.getDeclaredField("text");
+        textField.setAccessible(true);
+        return (String) textField.get(label);
     }
 }

@@ -56,6 +56,12 @@ public final class TesseraTemplateRenderer {
                                   Map<String, TesseraInputState> inputStates,
                                   int x, int y, int w, int h) {
         try {
+            if (template == null) {
+                throw new IllegalArgumentException("Tessera template is null");
+            }
+            if (template.root() == null) {
+                throw new IllegalArgumentException("Tessera template root is null");
+            }
             Deque<TesseraNode> ancestors = new ArrayDeque<>();
             // Resolve @media rules against the current GUI viewport width
             int vw = guiScaledWidth();
@@ -608,6 +614,7 @@ public final class TesseraTemplateRenderer {
                 }
                 if (placeholder != null && !placeholder.isEmpty()) input.placeholder(placeholder);
                 input.maxLength(maxLen);
+                configureInputSuggestions(input, node, model);
                 if (style.background  != TesseraStyle.UNSET) input.bgColor(style.background);
                 if (style.borderColor != TesseraStyle.UNSET) input.borderColor(style.borderColor);
                 if (style.color       != TesseraStyle.UNSET) input.textColor(style.color);
@@ -1167,6 +1174,53 @@ public final class TesseraTemplateRenderer {
     private static float parseFloatAttr(String value, float fallback) {
         if (value == null || value.isBlank()) return fallback;
         try { return Float.parseFloat(value.trim()); } catch (NumberFormatException e) { return fallback; }
+    }
+
+    private static void configureInputSuggestions(TesseraInput input, TesseraNode node, TesseraModel model) {
+        String suggestionsAttr = TesseraBindingResolver.resolve(node.attr("suggestions"), model);
+        String autocompleteAttr = TesseraBindingResolver.resolve(node.attr("autocomplete"), model);
+
+        List<String> suggestions = parseSuggestionList(suggestionsAttr);
+        if (suggestions.isEmpty() && !isAutocompleteBoolean(autocompleteAttr)) {
+            suggestions = parseSuggestionList(autocompleteAttr);
+        }
+        if (!suggestions.isEmpty()) input.suggestions(suggestions);
+
+        if (!autocompleteAttr.isBlank() && isAutocompleteBoolean(autocompleteAttr)) {
+            input.autocomplete(isTruthyAutocomplete(autocompleteAttr));
+        } else if (!suggestions.isEmpty()) {
+            input.autocomplete(true);
+        }
+    }
+
+    private static List<String> parseSuggestionList(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        String raw = value.trim();
+        if (isAutocompleteBoolean(raw)) return List.of();
+        if (raw.startsWith("[") && raw.endsWith("]")) raw = raw.substring(1, raw.length() - 1);
+
+        String[] parts = raw.split("[,;|]");
+        List<String> out = new ArrayList<>();
+        for (String part : parts) {
+            String item = part.trim();
+            if ((item.startsWith("\"") && item.endsWith("\"")) || (item.startsWith("'") && item.endsWith("'"))) {
+                item = item.substring(1, item.length() - 1).trim();
+            }
+            if (!item.isBlank()) out.add(item);
+        }
+        return out;
+    }
+
+    private static boolean isAutocompleteBoolean(String value) {
+        if (value == null || value.isBlank()) return false;
+        String normalized = value.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalized.equals("true") || normalized.equals("false")
+                || normalized.equals("on") || normalized.equals("off");
+    }
+
+    private static boolean isTruthyAutocomplete(String value) {
+        String normalized = value.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalized.equals("true") || normalized.equals("on");
     }
 
     /**
