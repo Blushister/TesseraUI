@@ -62,6 +62,9 @@ public final class TesseraItemSlot extends TesseraElement {
     /** Sets the slot background colour (normal state). */
     public TesseraItemSlot slotBg(int c) { this.slotBg = c; return this; }
 
+    /** Sets the slot background colour while hovered. */
+    public TesseraItemSlot hoverBg(int c) { this.hoverBg = c; return this; }
+
     /** When {@code true} (default), the stack count is shown for stacks &gt; 1. */
     public TesseraItemSlot showCount(boolean b) { this.showCount = b; return this; }
 

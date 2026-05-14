@@ -413,6 +413,7 @@ public final class TesseraTemplateRenderer {
                                              int depth,
                                              TesseraStyle inherited) {
         TesseraStyle style = inherited.merge(sheet.resolve(node, ancestors)); // apply CSS inheritance
+        TesseraStyle hoverStyle = inherited.merge(sheet.resolveHover(node, ancestors));
 
         // calc() — resolved here because availW/availH are only known at layout time
         int wRaw = style.widthCalc  != null ? TesseraCssParser.evalCalc(style.widthCalc,  availW)
@@ -1066,6 +1067,10 @@ public final class TesseraTemplateRenderer {
                 int ssz = parseIntAttr(node.attr("size"), 18);
                 if (wVal > 0) ssz = wVal;
                 var slot = new TesseraItemSlot(0, 0, ssz);
+                if (style.background != TesseraStyle.UNSET) slot.slotBg(style.background);
+                if (hoverStyle.background != TesseraStyle.UNSET) slot.hoverBg(hoverStyle.background);
+                else if (style.background != TesseraStyle.UNSET) slot.hoverBg(style.background);
+                if (style.borderColor != TesseraStyle.UNSET) slot.borderColor(style.borderColor);
                 String itemId = TesseraBindingResolver.resolve(node.attr("item"), model);
                 if (itemId != null && !itemId.isBlank()) {
                     try {
