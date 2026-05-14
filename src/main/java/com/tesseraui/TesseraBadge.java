@@ -25,7 +25,7 @@ public class TesseraBadge extends TesseraElement {
 
     @Override
     public int getWidth() {
-        return Math.max(width, 20);
+        return width > 0 ? width : measuredWidth();
     }
 
     public TesseraBadge label(String label) {
@@ -54,20 +54,20 @@ public class TesseraBadge extends TesseraElement {
         String displayed = TesseraTextStyling.transform(label, textTransform);
         var comp = TesseraFonts.component(displayed, fontFamily, fontWeight);
         float scale = fontSize / TesseraFonts.naturalPx(fontFamily);
-        if (font != null) width = (int) Math.ceil(font.width(comp) * scale) + paddingH;
+        int renderWidth = getWidth();
 
-        g.fill(x, y, x + width, y + height, bgColor);
+        g.fill(x, y, x + renderWidth, y + height, bgColor);
 
         if (borderThickness > 0 && borderColor != 0) {
             int t = borderThickness;
-            g.fill(x,             y,              x + width,    y + t,        borderColor);
-            g.fill(x,             y + height - t, x + width,    y + height,   borderColor);
+            g.fill(x,             y,              x + renderWidth,    y + t,        borderColor);
+            g.fill(x,             y + height - t, x + renderWidth,    y + height,   borderColor);
             g.fill(x,             y,              x + t,        y + height,   borderColor);
-            g.fill(x + width - t, y,              x + width,    y + height,   borderColor);
+            g.fill(x + renderWidth - t, y,              x + renderWidth,    y + height,   borderColor);
         }
 
         int textW = (int) Math.ceil(font.width(comp) * scale);
-        int textX = x + (width - textW) / 2;
+        int textX = x + (renderWidth - textW) / 2;
         int textY = y + (height - (int) Math.ceil(8 * scale)) / 2;
         int drawColor = TesseraLabel.applyOpacity(textColor, opacity);
 
@@ -81,5 +81,14 @@ public class TesseraBadge extends TesseraElement {
             g.pose().popPose();
         }
         renderStateOverlays(g, mx, my);
+    }
+
+    private int measuredWidth() {
+        var font = Minecraft.getInstance().font;
+        if (font == null) return 20;
+        String displayed = TesseraTextStyling.transform(label, textTransform);
+        var comp = TesseraFonts.component(displayed, fontFamily, fontWeight);
+        float scale = fontSize / TesseraFonts.naturalPx(fontFamily);
+        return Math.max(20, (int) Math.ceil(font.width(comp) * scale) + paddingH);
     }
 }
