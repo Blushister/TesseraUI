@@ -944,6 +944,8 @@ public final class TesseraTemplateRenderer {
                 float slVal = parseFloatAttr(valueRaw, slMin);
                 var sl = new TesseraSlider(0, 0, slw, slh, slMin, slMax, slVal);
                 String onInputName = node.attr("oninput");
+                String dragKey = !node.attr("id").isEmpty() ? node.attr("id") : onInputName;
+                sl.dragKey(dragKey);
                 if (!onInputName.isEmpty() && inputHandlers != null && inputHandlers.containsKey(onInputName))
                     sl.onInput(inputHandlers.get(onInputName));
                 yield sl;

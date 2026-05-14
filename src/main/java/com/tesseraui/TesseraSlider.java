@@ -11,14 +11,17 @@ import java.util.function.Consumer;
  * ({@code isVisible()}/{@code setVisible()}) for {@code v-show} semantics.</p>
  *
  * <p>The {@code oninput} handler is called with the current value as a String
- * when the mouse button is released.</p>
+ * whenever a click or drag changes the value.</p>
  */
 public class TesseraSlider extends TesseraElement {
+
+    private static String activeDragKey = null;
 
     private final float min;
     private final float max;
     private float value;
     private boolean dragging = false;
+    private String dragKey = null;
 
     private Consumer<String> onInput;
 
@@ -38,6 +41,11 @@ public class TesseraSlider extends TesseraElement {
 
     public TesseraSlider onInput(Consumer<String> handler) {
         this.onInput = handler;
+        return this;
+    }
+
+    public TesseraSlider dragKey(String key) {
+        this.dragKey = (key == null || key.isBlank()) ? null : key;
         return this;
     }
 
@@ -61,6 +69,33 @@ public class TesseraSlider extends TesseraElement {
         int trackW = width - THUMB_W;
         float ratio = (float) ((mx - x - THUMB_W / 2.0) / Math.max(1, trackW));
         return clamp(min + ratio * (max - min), min, max);
+    }
+
+    private void updateValueFromMouse(double mx) {
+        float next = xToValue(mx);
+        if (Float.compare(next, value) == 0) return;
+        value = next;
+        emitInput();
+    }
+
+    private void emitInput() {
+        if (onInput == null) return;
+        String formatted = (value == Math.floor(value) && !Float.isInfinite(value))
+                ? String.valueOf((int) value)
+                : String.valueOf(value);
+        onInput.accept(formatted);
+    }
+
+    private boolean ownsActiveDrag() {
+        return dragKey != null && dragKey.equals(activeDragKey);
+    }
+
+    private void captureDrag() {
+        if (dragKey != null) activeDragKey = dragKey;
+    }
+
+    private void releaseDrag() {
+        if (ownsActiveDrag()) activeDragKey = null;
     }
 
     @Override
@@ -91,8 +126,9 @@ public class TesseraSlider extends TesseraElement {
         if (btn != 0 || !active || !visible || min >= max) return false;
         if (mx >= x && mx < x + width && my >= y && my < y + height) {
             dragging = true;
-            value = xToValue(mx);
             pressed = true;
+            captureDrag();
+            updateValueFromMouse(mx);
             return true;
         }
         return false;
@@ -100,23 +136,19 @@ public class TesseraSlider extends TesseraElement {
 
     @Override
     public void mouseReleased(double mx, double my, int btn) {
-        if (btn == 0 && dragging && visible) {
+        if (btn == 0 && visible && (dragging || ownsActiveDrag())) {
             dragging = false;
             pressed = false;
-            if (onInput != null) {
-                // Format as integer if value is whole, otherwise one decimal
-                String formatted = (value == Math.floor(value) && !Float.isInfinite(value))
-                        ? String.valueOf((int) value)
-                        : String.valueOf(value);
-                onInput.accept(formatted);
-            }
+            releaseDrag();
         }
     }
 
     @Override
     public void mouseDragged(double mx, double my, int btn) {
-        if (btn == 0 && dragging && active && visible && min < max) {
-            value = xToValue(mx);
+        if (btn == 0 && active && visible && min < max && (dragging || ownsActiveDrag())) {
+            dragging = true;
+            pressed = true;
+            updateValueFromMouse(mx);
         }
     }
 }
