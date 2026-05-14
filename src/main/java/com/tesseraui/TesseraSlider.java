@@ -2,6 +2,7 @@ package com.tesseraui;
 
 import net.minecraft.client.gui.GuiGraphics;
 
+import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -80,10 +81,17 @@ public class TesseraSlider extends TesseraElement {
 
     private void emitInput() {
         if (onInput == null) return;
-        String formatted = (value == Math.floor(value) && !Float.isInfinite(value))
-                ? String.valueOf((int) value)
-                : String.valueOf(value);
-        onInput.accept(formatted);
+        onInput.accept(formatValue(value));
+    }
+
+    private static String formatValue(float value) {
+        if (!Float.isFinite(value)) return String.valueOf(value);
+        float rounded = Math.round(value * 100.0f) / 100.0f;
+        if (rounded == Math.floor(rounded)) return String.valueOf((int) rounded);
+        String text = String.format(Locale.ROOT, "%.2f", rounded);
+        while (text.endsWith("0")) text = text.substring(0, text.length() - 1);
+        if (text.endsWith(".")) text = text.substring(0, text.length() - 1);
+        return text;
     }
 
     private boolean ownsActiveDrag() {
