@@ -27,6 +27,24 @@ public final class TesseraRenderContext {
         return inputStates.computeIfAbsent(id, ignored -> new TesseraInputState());
     }
 
+    /**
+     * Replaces the persisted text for one input id and moves the caret to the end.
+     *
+     * <p>Use this when application code changes a model value programmatically and
+     * the next rebuild should show that value instead of the previously persisted
+     * input text.</p>
+     */
+    public TesseraInputState setInputText(String id, String text) {
+        Objects.requireNonNull(id, "id");
+        TesseraInputState state = inputState(id);
+        state.text = text != null ? text : "";
+        state.cursor = state.text.length();
+        state.selStart = state.cursor;
+        state.scrollX = 0;
+        state.scrollY = 0;
+        return state;
+    }
+
     /** Clears the persisted state for one input id. */
     public boolean clearInput(String id) {
         return inputStates.remove(id) != null;

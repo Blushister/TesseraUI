@@ -952,11 +952,16 @@ public final class TesseraTemplateRenderer {
             }
 
             case "hr" -> {
-                // Horizontal rule: a 1px-tall colored bar spanning available width
-                int hrw = wVal > 0 ? wVal : availW;
-                int hrh = Math.max(1, hVal > 0 ? hVal : 1);
-                int lineColor = style.color != TesseraStyle.UNSET ? style.color : TesseraPalette.LINE;
-                yield TesseraPanel.row(0, 0, hrw, hrh).background(lineColor);
+                int hrw = wVal > 0 ? wVal : (inheritWidth && availW > 0 ? availW : 100);
+                int hrh = hRaw != TesseraStyle.UNSET ? Math.max(1, hVal)
+                        : style.border != TesseraStyle.UNSET ? Math.max(1, style.border)
+                        : 1;
+                int lineColor = style.borderColor != TesseraStyle.UNSET ? style.borderColor
+                        : style.background != TesseraStyle.UNSET ? style.background
+                        : style.color != TesseraStyle.UNSET ? style.color
+                        : TesseraPalette.LINE;
+                yield TesseraPanel.row(0, 0, hrw, hrh)
+                        .background(TesseraLabel.applyOpacity(lineColor, opacityVal));
             }
 
             case "select" -> {
@@ -1027,7 +1032,10 @@ public final class TesseraTemplateRenderer {
                     for (int i = 0; i < count; i++) {
                         final int idx = i;
                         final String vn = varName;
-                        vlItems.add(k -> model.resolve(vn + "." + k + "." + idx));
+                        vlItems.add(k -> {
+                            String rowValue = model.resolve(vn + "." + k + "." + idx);
+                            return rowValue != null ? rowValue : model.resolve(k);
+                        });
                     }
                 }
                 final java.util.List<TesseraNode> rowTemplate = new java.util.ArrayList<>(node.children());

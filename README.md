@@ -3,7 +3,7 @@
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.1-62B47A?style=flat-square&logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![NeoForge](https://img.shields.io/badge/NeoForge-21.1.x-E04E14?style=flat-square)](https://neoforged.net/)
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://adoptium.net/)
-[![License](https://img.shields.io/badge/License-LGPL--2.1-4A90D9?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-LGPL--3.0-4A90D9?style=flat-square)](LICENSE)
 [![CurseForge](https://img.shields.io/badge/CurseForge-TesseraUI-F16436?style=flat-square&logo=curseforge&logoColor=white)](https://www.curseforge.com/minecraft/mc-mods/tesseraui)
 [![GitHub Stars](https://img.shields.io/github/stars/Blushister/TesseraUI?style=flat-square&logo=github&color=B87333)](https://github.com/Blushister/TesseraUI)
 [![Wiki](https://img.shields.io/badge/Wiki-read%20the%20docs-805AD5?style=flat-square&logo=gitbook&logoColor=white)](https://github.com/Blushister/TesseraUI/wiki)
@@ -26,7 +26,7 @@ Drop the jar in your `libs/` folder, then in `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation files('libs/tesseraui-1.0.0.jar')
+    implementation files('libs/tesseraui-1.1.jar')
 }
 ```
 

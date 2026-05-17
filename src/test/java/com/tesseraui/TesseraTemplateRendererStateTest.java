@@ -119,6 +119,18 @@ class TesseraTemplateRendererStateTest {
     }
 
     @Test
+    void renderContext_setInputText_updatesPersistedTextAndCaret() {
+        TesseraRenderContext context = new TesseraRenderContext();
+        TesseraInputState state = context.setInputText("zone.dimension", "arcadia_dungeon:dungeon");
+
+        assertEquals("arcadia_dungeon:dungeon", state.text);
+        assertEquals(state.text.length(), state.cursor);
+        assertEquals(state.cursor, state.selStart);
+        assertEquals(0, state.scrollX);
+        assertSame(state, context.inputState("zone.dimension"));
+    }
+
+    @Test
     void globalStylesheet_appliesBeforeLocalCss() {
         TesseraTemplate.addGlobalStylesheet(".box { color: #112233; background: #010203; }");
         TesseraTemplate template = TesseraTemplate.fromString(
@@ -164,6 +176,19 @@ class TesseraTemplateRendererStateTest {
         } finally {
             TesseraI18n.TRANSLATOR = previous;
         }
+    }
+
+    @Test
+    void build_hrRendersAsOnePixelSeparatorByDefault() {
+        TesseraTemplate template = TesseraTemplate.fromString(
+                "<col><hr/></col>",
+                "hr { width: 90; }");
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, TesseraModel.EMPTY, Map.of(), Map.of(), 0, 0, 120, 40);
+        TesseraPanel separator = (TesseraPanel) root.debugChildren().get(0);
+
+        assertEquals(1, separator.getHeight());
     }
 
     @Test
@@ -215,6 +240,37 @@ class TesseraTemplateRendererStateTest {
         var textField = TesseraLabel.class.getDeclaredField("text");
         textField.setAccessible(true);
         assertEquals("First row", textField.get(label));
+    }
+
+    @Test
+    void virtualList_rowBindingsFallbackToParentModelForGlobalKeys() throws Exception {
+        TesseraTemplate template = TesseraTemplate.fromString(
+                """
+                <col>
+                  <virtual-list v-for="row in rows" row-height="12">
+                    <row>
+                      <label>{{ s.shared }}</label>
+                    </row>
+                  </virtual-list>
+                </col>
+                """,
+                "virtual-list { width: 100; height: 20; } label { width: 80; height: 10; }");
+        TesseraModel model = TesseraModel.of(Map.of(
+                "rows", "1",
+                "s.shared", "Shared value"
+        ));
+
+        TesseraPanel root = TesseraTemplateRenderer.build(
+                template, model, Map.of(), Map.of(), 0, 0, 120, 40);
+        TesseraVirtualList list = (TesseraVirtualList) root.debugChildren().get(0);
+
+        var getRow = TesseraVirtualList.class.getDeclaredMethod("getRow", int.class);
+        getRow.setAccessible(true);
+        TesseraPanel row = (TesseraPanel) getRow.invoke(list, 0);
+        TesseraPanel inner = (TesseraPanel) row.debugChildren().get(0);
+        TesseraLabel label = (TesseraLabel) inner.debugChildren().get(0);
+
+        assertEquals("Shared value", labelText(label));
     }
 
     private static String labelText(TesseraLabel label) throws Exception {
