@@ -44,6 +44,8 @@ import org.lwjgl.glfw.GLFW;
  */
 public abstract class TesseraScreen extends Screen {
 
+    private static final boolean DEBUG_HOTKEY_ENABLED = Boolean.getBoolean("tesseraui.debug.hotkey");
+
     protected TesseraScreen(Component title) {
         super(title);
     }
@@ -145,7 +147,8 @@ public abstract class TesseraScreen extends Screen {
      * <ul>
      *   <li>{@code Escape} — closes an open modal</li>
      *   <li>{@code Tab} / {@code Shift+Tab} — keyboard focus navigation</li>
-     *   <li>{@code I} — toggles the {@link TesseraDebugOverlay}</li>
+     *   <li>{@code Ctrl+Alt+I} — toggles the {@link TesseraDebugOverlay} when
+     *       {@code -Dtesseraui.debug.hotkey=true} is enabled</li>
      * </ul>
      */
     @Override
@@ -166,8 +169,11 @@ public abstract class TesseraScreen extends Screen {
             if (focused != null) focused.keyPressed(key, scan, mods);
             return true;
         }
-        // I key toggles debug overlay
-        if (key == GLFW.GLFW_KEY_I) {
+        // Debug overlay hotkey is opt-in to avoid stealing normal gameplay/menu keys.
+        if (DEBUG_HOTKEY_ENABLED
+                && key == GLFW.GLFW_KEY_I
+                && (mods & GLFW.GLFW_MOD_CONTROL) != 0
+                && (mods & GLFW.GLFW_MOD_ALT) != 0) {
             TesseraDebugOverlay.toggle();
             return true;
         }

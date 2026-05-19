@@ -1131,11 +1131,19 @@ public class TesseraPanel implements TesseraWidget {
     private static void renderTooltipBox(GuiGraphics g, String text, int mx, int my) {
         var font = Minecraft.getInstance().font;
         float scale = 6f / 7f;
-        int tw = (int) (font.width(text) * scale) + 10;
-        int th = 14;
+        int screenW = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        int screenH = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        int maxBoxW = Math.max(80, Math.min(260, screenW - 8));
+        int maxTextW = Math.max(40, (int) ((maxBoxW - 10) / scale));
+        List<String> lines = wrapTooltipText(font, text, maxTextW);
+        int textW = lines.stream().mapToInt(font::width).max().orElse(0);
+        int tw = Math.min(maxBoxW, (int) (textW * scale) + 10);
+        int th = Math.max(14, 8 + lines.size() * 8);
         int tx = mx + 6;
         int ty = my - th - 4;
         if (ty < 2) ty = my + 4;
+        if (tx + tw > screenW - 2) tx = Math.max(2, screenW - tw - 2);
+        if (ty + th > screenH - 2) ty = Math.max(2, screenH - th - 2);
 
         g.pose().pushPose();
         g.pose().translate(tx, ty, 500);
@@ -1148,8 +1156,43 @@ public class TesseraPanel implements TesseraWidget {
         // text
         g.pose().translate(5, 4, 0);
         g.pose().scale(scale, scale, 1f);
-        g.drawString(font, text, 0, 0, TesseraPalette.CREAM, false);
+        for (int i = 0; i < lines.size(); i++) {
+            g.drawString(font, lines.get(i), 0, i * 9, TesseraPalette.CREAM, false);
+        }
         g.pose().popPose();
+    }
+
+    private static List<String> wrapTooltipText(net.minecraft.client.gui.Font font, String text, int maxTextW) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isBlank()) {
+            lines.add("");
+            return lines;
+        }
+        StringBuilder current = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            if (font.width(candidate) <= maxTextW) {
+                current.setLength(0);
+                current.append(candidate);
+                continue;
+            }
+            if (!current.isEmpty()) {
+                lines.add(current.toString());
+                current.setLength(0);
+            }
+            while (font.width(word) > maxTextW && word.length() > 1) {
+                int cut = word.length();
+                while (cut > 1 && font.width(word.substring(0, cut)) > maxTextW) {
+                    cut--;
+                }
+                lines.add(word.substring(0, cut));
+                word = word.substring(cut);
+            }
+            current.append(word);
+        }
+        if (!current.isEmpty()) lines.add(current.toString());
+        if (lines.isEmpty()) lines.add(text);
+        return lines;
     }
 
     @Override
