@@ -998,13 +998,7 @@ public class TesseraPanel implements TesseraWidget {
 
         if (useShader) RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
-        // Render tooltip for any directly-hovered child that has one
-        renderHoveredChildTooltip(g, mx, my);
-
-        // Render this panel's own tooltip when hovered (and no child tooltip was shown)
-        if (tooltip != null && !tooltip.isBlank() && hovered) {
-            renderTooltipBox(g, tooltip, mx, my);
-        }
+        renderTooltips(g, mx, my);
     }
 
     // ── Transition animation helpers ──────────────────────────────────────────
@@ -1112,6 +1106,13 @@ public class TesseraPanel implements TesseraWidget {
      * Checks direct children for hover + tooltip, and renders the tooltip box on top.
      * Each panel handles its own immediate children; nesting works automatically.
      */
+    public void renderTooltips(GuiGraphics g, int mx, int my) {
+        renderHoveredChildTooltip(g, mx, my);
+        if (tooltip != null && !tooltip.isBlank() && bounds().contains(mx, my)) {
+            renderTooltipBox(g, tooltip, mx, my);
+        }
+    }
+
     private void renderHoveredChildTooltip(GuiGraphics g, int mx, int my) {
         for (Entry e : children) {
             if (!e.widget().isVisible()) continue;
@@ -1128,7 +1129,7 @@ public class TesseraPanel implements TesseraWidget {
      * Renders a small copper-bordered tooltip box near the mouse cursor.
      * Uses a Z-translate of 500 so it appears above sibling widgets.
      */
-    private static void renderTooltipBox(GuiGraphics g, String text, int mx, int my) {
+    public static void renderTooltipBox(GuiGraphics g, String text, int mx, int my) {
         var font = Minecraft.getInstance().font;
         float scale = 6f / 7f;
         int screenW = Minecraft.getInstance().getWindow().getGuiScaledWidth();

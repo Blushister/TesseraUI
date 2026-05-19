@@ -112,6 +112,8 @@ public final class TesseraVirtualList extends TesseraElement {
         int lastVisible = (scrollY + height) / effRowH;
         if (lastVisible >= items.size()) lastVisible = items.size() - 1;
 
+        TesseraWidget hoveredRow = null;
+
         // Clip rendering to the list bounds
         g.enableScissor(x, y, x + width, y + height);
 
@@ -121,6 +123,7 @@ public final class TesseraVirtualList extends TesseraElement {
             row.setPosition(x, rowY);
             row.setSize(iW, rowHeight);
             if (row.isVisible()) row.render(g, mx, my);
+            if (row.isVisible() && row.bounds().contains(mx, my)) hoveredRow = row;
         }
 
         pruneCache(firstVisible, lastVisible);
@@ -129,6 +132,17 @@ public final class TesseraVirtualList extends TesseraElement {
 
         // Scrollbar
         renderScrollbar(g);
+
+        // Row tooltips must be drawn after the list scissor is disabled, otherwise
+        // long tooltips get clipped at the virtual-list bounds.
+        if (hoveredRow instanceof TesseraPanel rowPanel) {
+            rowPanel.renderTooltips(g, mx, my);
+        } else if (hoveredRow != null) {
+            String tip = hoveredRow.getTooltip();
+            if (tip != null && !tip.isBlank()) {
+                TesseraPanel.renderTooltipBox(g, tip, mx, my);
+            }
+        }
     }
 
     private void renderScrollbar(GuiGraphics g) {
